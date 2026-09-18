@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#06151b" />
+    <title>Последний сигнал</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="cabinet" aria-label="Игра Последний сигнал">
+      <header class="hud">
+        <div class="brand">ПОСЛЕДНИЙ СИГНАЛ <span>/// РМ-01</span></div>
+        <div id="system-status" class="system-status">СИСТЕМЫ: 0 / 3</div>
+      </header>
+
+      <section id="game" class="game" tabindex="0" aria-label="Игровое поле">
+        <div class="ocean-light"></div>
+        <div class="submarine">
+          <div class="pipes pipe-a"></div><div class="pipes pipe-b"></div>
+          <div id="room-1" class="room repair-room active-room">
+            <div class="room-label">01 · РЕМОНТНЫЙ ОТСЕК</div>
+            <div class="fault-glow"></div>
+            <button class="terminal" data-task="power" data-room="1" aria-label="Ремонтный терминал">
+              <i></i><b>ЩИТ ПИТАНИЯ</b><small>НЕИСПРАВНОСТЬ</small>
+            </button>
+          </div>
+          <div id="room-2" class="room engine-room locked">
+            <div class="room-label">02 · ЭНЕРГЕТИЧЕСКИЙ ОТСЕК</div>
+            <div class="water-line"></div>
+            <button class="terminal" data-task="pump" data-room="2" aria-label="Насосный терминал">
+              <i></i><b>НАСОС № 4</b><small>НЕТ ПИТАНИЯ</small>
+            </button>
+          </div>
+          <div id="room-3" class="room sonar-room locked">
+            <div class="room-label">03 · ГИДРОАКУСТИКА</div>
+            <div class="sonar-dish"></div>
+            <button class="terminal" data-task="sonar" data-room="3" aria-label="Сонарный терминал">
+              <i></i><b>СОНАР</b><small>НЕТ ПИТАНИЯ</small>
+            </button>
+          </div>
+          <div class="door door-one"></div><div class="door door-two"></div>
+          <div id="drone" class="drone facing-right" aria-label="Ремонтный дрон">
+            <span class="antenna"></span><span class="eye"></span><span class="arm arm-one"></span><span class="arm arm-two"></span>
+          </div>
+        </div>
+        <div id="prompt" class="prompt hidden">[ E ] ВЗАИМОДЕЙСТВОВАТЬ</div>
+        <div id="message" class="message">СИСТЕМА РМ-01: ВОССТАНОВЛЕНИЕ ПРОТОКОЛА...</div>
+      </section>
+
+      <footer class="controls"><span>← → / A D — ДВИЖЕНИЕ</span><span>↑ / W / ПРОБЕЛ — ЗАВИСАНИЕ</span><span>E — ВЗАИМОДЕЙСТВИЕ</span></footer>
+    </main>
+
+    <dialog id="minigame" class="minigame">
+      <button id="close-game" class="close" aria-label="Закрыть">×</button>
+      <div id="minigame-content"></div>
+    </dialog>
+    <script src="game.js"></script>
+  </body>
+</html>
