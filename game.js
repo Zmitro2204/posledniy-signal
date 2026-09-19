@@ -1,15 +1,15 @@
 const game=document.querySelector('#game'),canvas=document.querySelector('#map'),ctx=canvas.getContext('2d'),dialog=document.querySelector('#minigame'),content=document.querySelector('#minigame-content'),message=document.querySelector('#message'),status=document.querySelector('#system-status');
-const S=24,done=new Set();let player={x:3,y:8},active=null;
+const S=24,OX=130,OY=200,done=new Set();let player={x:3,y:11},active=null;
 const rooms=[
- {id:1,name:'РЕМОНТНЫЙ ОТСЕК',task:'power',x:2,y:4,w:7,h:7,tx:5,ty:7},
- {id:2,name:'ЭНЕРГООТСЕК',task:'pump',x:12,y:4,w:7,h:7,tx:15,ty:7},
- {id:3,name:'ГИДРОАКУСТИКА',task:'sonar',x:22,y:4,w:7,h:7,tx:25,ty:7},
- {id:4,name:'КАПИТАНСКИЙ МОСТИК',task:'code',x:37,y:2,w:8,h:7,tx:41,ty:5},
- {id:5,name:'КАЮТ-КОМПАНИЯ',task:'relay',x:8,y:13,w:7,h:4,tx:11,ty:15},
- {id:6,name:'КАМБУЗ / ОСУШЕНИЕ',task:'pump',x:21,y:13,w:7,h:4,tx:24,ty:15},
- {id:7,name:'ТРЮМ СВЯЗИ',task:'code',x:35,y:12,w:8,h:5,tx:39,ty:14}
+ {id:1,name:'РЕМОНТНЫЙ ОТСЕК',task:'power',x:2,y:7,w:6,h:6,tx:5,ty:10},
+ {id:2,name:'ЭНЕРГООТСЕК',task:'pump',x:8,y:7,w:6,h:6,tx:11,ty:10},
+ {id:3,name:'ГИДРОАКУСТИКА',task:'sonar',x:14,y:7,w:6,h:6,tx:17,ty:10},
+ {id:4,name:'КАПИТАНСКИЙ МОСТИК',task:'code',x:20,y:7,w:6,h:6,tx:23,ty:10},
+ {id:5,name:'КАЮТ-КОМПАНИЯ',task:'relay',x:26,y:7,w:6,h:6,tx:29,ty:10},
+ {id:6,name:'КАМБУЗ / ОСУШЕНИЕ',task:'pump',x:32,y:7,w:6,h:6,tx:35,ty:10},
+ {id:7,name:'ТРЮМ СВЯЗИ',task:'code',x:38,y:7,w:6,h:6,tx:41,ty:10}
 ];
-const corridors=[ [9,7,3,1],[19,7,3,1],[29,7,8,1],[15,11,1,2],[15,13,6,1],[28,14,7,1],[39,9,1,3] ];
+const corridors=[];
 const walk=new Set(),key=(x,y)=>x+','+y;
 function add(x,y,w,h){for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++)walk.add(key(i,j));}
 rooms.forEach(r=>add(r.x,r.y,r.w,r.h));corridors.forEach(c=>add(...c));
@@ -17,15 +17,21 @@ function roomAt(x,y){return rooms.find(r=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h)}
 function say(t){message.textContent='РМ-01: '+t}
 function reachable(x,y){const r=roomAt(x,y);return walk.has(key(x,y))&&(!r||r.id<=done.size+1)}
 function draw(){
- ctx.clearRect(0,0,1200,500);ctx.fillStyle='#06151b';ctx.fillRect(0,0,1200,500);
- ctx.strokeStyle='#31565e';ctx.lineWidth=9;ctx.strokeRect(18,26,1125,405);ctx.fillStyle='#0b2229';ctx.fillRect(22,30,1117,397);
- corridors.forEach(c=>{ctx.fillStyle='#173640';ctx.fillRect(c[0]*S,c[1]*S,c[2]*S,c[3]*S)});
- rooms.forEach(r=>{const unlocked=r.id<=done.size+1, fixed=done.has(r.id);ctx.fillStyle=fixed?'#17403f':unlocked?'#102e35':'#0a171c';ctx.fillRect(r.x*S,r.y*S,r.w*S,r.h*S);ctx.strokeStyle=unlocked?'#5c8b89':'#2b454b';ctx.lineWidth=4;ctx.strokeRect(r.x*S,r.y*S,r.w*S,r.h*S);ctx.fillStyle=unlocked?'#b7ddd3':'#52666a';ctx.font='18px VT323';ctx.fillText(('0'+r.id).slice(-2)+' · '+r.name,r.x*S+8,r.y*S+22);
-  ctx.fillStyle=fixed?'#76e6c5':'#ef6b5d';ctx.fillRect((r.tx-.5)*S,(r.ty-.5)*S,S,S);ctx.strokeStyle='#d7f5e8';ctx.strokeRect((r.tx-.5)*S,(r.ty-.5)*S,S,S);
- });
- rooms.slice(1).forEach(r=>{if(r.id>done.size+1){ctx.fillStyle='#263b41';ctx.fillRect((r.x-1)*S,(r.ty-.75)*S,12,S*1.5);ctx.fillStyle='#ef6b5d';ctx.font='13px VT323';ctx.fillText('ЗАКРЫТО',(r.x-1.2)*S,(r.ty-1)*S)}});
- ctx.fillStyle='#76e6c5';ctx.fillRect((player.x+.15)*S,(player.y+.2)*S,S*.7,S*.6);ctx.fillStyle='#f7bd54';ctx.fillRect((player.x+.55)*S,(player.y+.4)*S,5,5);
- if(active){ctx.strokeStyle='#f7bd54';ctx.lineWidth=2;ctx.strokeRect((active.tx-1)*S,(active.ty-1)*S,S*2,S*2)}
+ const X=x=>OX+x*S,Y=y=>OY+y*S;
+ ctx.clearRect(0,0,1400,780);ctx.fillStyle='#06151b';ctx.fillRect(0,0,1400,780);
+ ctx.strokeStyle='#143d46';ctx.lineWidth=1;for(let y=0;y<780;y+=12){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(1400,y);ctx.stroke()}
+ ctx.strokeStyle='#315f68';ctx.lineWidth=6;ctx.strokeRect(24,20,1352,730);ctx.strokeStyle='#173e47';ctx.lineWidth=2;ctx.strokeRect(40,35,1320,700);
+ ctx.fillStyle='#6f9ca1';ctx.font='17px VT323';['КЛАСС:  ДИЗЕЛЬ-ЭЛЕКТРИЧЕСКАЯ ПЛ','ПРОЕКТ:  РМ-01','ДЛИНА:   74.0 М','ЭКИПАЖ:  22 ЧЕЛ.','СТАТУС:  ЧАСТИЧНО ВОССТАНОВЛЕНА'].forEach((t,i)=>ctx.fillText(t,64,82+i*20));
+ ctx.strokeStyle='#315f68';ctx.lineWidth=1;ctx.strokeRect(955,55,410,150);ctx.fillStyle='#8ebbb9';ctx.font='16px VT323';ctx.fillText('ВИД: ПРАВЫЙ БОРТ',975,78);ctx.strokeStyle='#76e6c5';ctx.beginPath();ctx.ellipse(1090,132,100,18,0,0,Math.PI*2);ctx.stroke();ctx.moveTo(1170,132);ctx.lineTo(1200,117);ctx.lineTo(1200,147);ctx.stroke();
+ [['#76e6c5','СИСТЕМА ОНЛАЙН'],['#f7bd54','ВЫБРАННЫЙ ОТСЕК'],['#ef6b5d','СИСТЕМА ЗАБЛОКИРОВАНА'],['#315f68','НЕТ ПИТАНИЯ']].forEach((v,i)=>{ctx.strokeStyle=v[0];ctx.lineWidth=3;ctx.strokeRect(1208,72+i*28,18,18);ctx.fillStyle='#7fa4a5';ctx.fillText(v[1],1243,87+i*28)});
+ ctx.beginPath();ctx.moveTo(78,495);ctx.bezierCurveTo(92,385,175,343,325,342);ctx.lineTo(1095,342);ctx.bezierCurveTo(1195,347,1260,382,1305,430);ctx.lineTo(1350,490);ctx.lineTo(1305,550);ctx.bezierCurveTo(1260,598,1195,633,1095,638);ctx.lineTo(325,638);ctx.bezierCurveTo(175,637,92,595,78,495);ctx.closePath();ctx.fillStyle='#08242a';ctx.fill();ctx.strokeStyle='#83e7da';ctx.lineWidth=3;ctx.stroke();
+ ctx.beginPath();ctx.moveTo(570,342);ctx.lineTo(590,270);ctx.lineTo(760,270);ctx.lineTo(790,342);ctx.moveTo(610,270);ctx.lineTo(610,205);ctx.lineTo(630,205);ctx.lineTo(630,270);ctx.moveTo(680,270);ctx.lineTo(680,185);ctx.lineTo(700,185);ctx.lineTo(700,270);ctx.moveTo(745,270);ctx.lineTo(745,220);ctx.lineTo(765,220);ctx.lineTo(765,270);ctx.strokeStyle='#76e6c5';ctx.lineWidth=2;ctx.stroke();
+ for(let x=150;x<1240;x+=38){ctx.strokeStyle='#1b5960';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,365);ctx.lineTo(x,615);ctx.stroke()}
+ rooms.forEach(r=>{const unlocked=r.id<=done.size+1,fixed=done.has(r.id),selected=unlocked&&!fixed;const x=X(r.x),y=Y(r.y),w=r.w*S,h=r.h*S;ctx.fillStyle=fixed?'#123b3d':unlocked?'#0c2a31':'#09191f';ctx.fillRect(x,y,w,h);ctx.strokeStyle=selected?'#f7bd54':unlocked?'#76e6c5':'#31565e';ctx.lineWidth=selected?4:2;ctx.strokeRect(x,y,w,h);if(selected){ctx.shadowColor='#f7bd54';ctx.shadowBlur=18;ctx.strokeRect(x+4,y+4,w-8,h-8);ctx.shadowBlur=0}ctx.fillStyle=unlocked?'#c2e7df':'#5c787a';ctx.font='18px VT323';const words=r.name.split(' ');ctx.fillText(('0'+r.id).slice(-2),x+13,y+28);words.slice(0,2).forEach((word,i)=>ctx.fillText(word,x+13,y+50+i*19));for(let k=0;k<4;k++){ctx.strokeStyle='#205058';ctx.lineWidth=1;ctx.strokeRect(x+15+k*28,y+h-45,19,25)}ctx.fillStyle=fixed?'#76e6c5':'#ef6b5d';ctx.fillRect(X(r.tx)-10,Y(r.ty)-10,20,20);ctx.strokeStyle='#e2fff2';ctx.lineWidth=2;ctx.strokeRect(X(r.tx)-12,Y(r.ty)-12,24,24)});
+ rooms.slice(1).forEach(r=>{const boundary=X(r.x);ctx.fillStyle=r.id<=done.size+1?'#76e6c5':'#ef6b5d';ctx.fillRect(boundary-4,Y(9),8,58);ctx.fillStyle='#7fa4a5';ctx.font='12px VT323';ctx.fillText(r.id<=done.size+1?'ШЛЮЗ':'LOCK',boundary-14,Y(12)+15)});
+ ctx.fillStyle='#76e6c5';ctx.fillRect(X(player.x)+4,Y(player.y)+6,16,15);ctx.strokeStyle='#e2fff2';ctx.lineWidth=2;ctx.strokeRect(X(player.x)+4,Y(player.y)+6,16,15);ctx.fillStyle='#f7bd54';ctx.fillRect(X(player.x)+14,Y(player.y)+12,4,4);
+ if(active){ctx.strokeStyle='#f7bd54';ctx.lineWidth=2;ctx.strokeRect(X(active.tx-1),Y(active.ty-1),S*2,S*2)}
+ ctx.strokeStyle='#315f68';ctx.lineWidth=1;ctx.strokeRect(58,665,200,80);ctx.strokeRect(1170,665,190,80);ctx.fillStyle='#7fa4a5';ctx.font='17px VT323';['ГЛУБИНА:   127 М','КУРС:      092°','СКОРОСТЬ:  0 УЗЛ.'].forEach((t,i)=>ctx.fillText(t,78,690+i*19));['ДАТЧИКИ:   НОРМА','КОРПУС:    ЦЕЛ','ПИТАНИЕ:   '+done.size+' / 7'].forEach((t,i)=>ctx.fillText(t,1190,690+i*19));
 }
 function update(){const r=roomAt(player.x,player.y);active=r&&!done.has(r.id)&&Math.abs(player.x-r.tx)+Math.abs(player.y-r.ty)<=1?r:null;draw();}
 function finish(id){done.add(id);status.textContent='СИСТЕМЫ: '+done.size+' / 7';dialog.close();say(id===7?'СИГНАЛ ПЕРЕДАН. В ГЛУБИНЕ ЕСТЬ ОТВЕТ.':'Система восстановлена. Открыт следующий шлюз.');game.focus();update()}
