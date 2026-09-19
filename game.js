@@ -28,15 +28,26 @@ function roomAt(x,y){return rooms.find(r=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h)}
 function say(t){message.textContent='РМ-01: '+t}
 function reachable(x,y){const r=roomAt(x,y);return walk.has(key(x,y))&&(!r||r.id<=done.size+1)}
 const pipeSegments=[[309,536,309,482],[309,482,372,482],[372,482,372,428],[372,428,488,428],[488,428,648,428],[648,428,648,344],[648,344,704,344],[588,428,588,512],[588,512,716,512],[716,512,716,528],[760,374,760,448],[760,448,840,448],[968,448,1032,448],[1032,448,1032,544],[1032,544,1100,544],[1190,552,1272,552],[1272,552,1272,504],[1272,504,1300,504]];
-function centeredPipePoint(px,py){let best=null;for(const [x1,y1,x2,y2] of pipeSegments){const dx=x2-x1,dy=y2-y1,len=dx*dx+dy*dy,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/len)),x=x1+dx*t,y=y1+dy*t,d=(px-x)*(px-x)+(py-y)*(py-y);if(!best||d<best.d)best={x,y,d}}return best&&best.d<900?[best.x,best.y]:[px,py]}
+function centeredPipePoint(px,py){let best=null;for(const [x1,y1,x2,y2] of pipeSegments){const dx=x2-x1,dy=y2-y1,len=dx*dx+dy*dy,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/len)),x=x1+dx*t,y=y1+dy*t,d=(px-x)*(px-x)+(py-y)*(py-y);if(!best||d<best.d)best={x,y,d}}return best?[best.x,best.y]:[px,py]}
+function drawAirlocks(){ctx.save();ctx.lineCap='square';ctx.lineJoin='round';for(const [x1,y1,x2,y2] of pipeSegments){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle='rgba(3,24,29,.92)';ctx.lineWidth=52;ctx.stroke();ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle='rgba(43,164,151,.72)';ctx.lineWidth=40;ctx.stroke();ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle='#b8fff0';ctx.shadowColor='#76e6c5';ctx.shadowBlur=12;ctx.lineWidth=3;ctx.stroke()}ctx.restore()}
+function pixel(cx,cy,x,y,w,h,color,p=3){ctx.fillStyle=color;ctx.fillRect(cx+x*p,cy+y*p,w*p,h*p)}
+function drawDrone(cx,cy){ctx.save();ctx.imageSmoothingEnabled=false;const p=3,black='#030708',joint='#777487',lime='#ccff72',beacon='#df604d';
+ // Матричный силуэт с присланного дрона: маяк, корпус, манипуляторы и две опоры.
+ pixel(cx,cy,-1,-7,1,1,beacon,p);pixel(cx,cy,-2,-6,3,1,beacon,p);pixel(cx,cy,-3,-5,5,1,black,p);
+ [[-8,-4],[-6,-4],[-3,-4],[3,-4],[6,-4],[8,-4],[-7,-3],[-5,-3],[-4,-3],[4,-3],[5,-3],[7,-3]].forEach(([x,y])=>pixel(cx,cy,x,y,1,1,black,p));
+ [[-7,-4],[-5,-4],[-3,-4],[3,-4],[6,-4]].forEach(([x,y])=>pixel(cx,cy,x,y,1,1,joint,p));
+ pixel(cx,cy,-2,-4,1,1,lime,p);pixel(cx,cy,-1,-4,2,1,lime,p);pixel(cx,cy,2,-4,1,1,lime,p);
+ pixel(cx,cy,-1,-3,2,1,lime,p);pixel(cx,cy,-2,-3,1,1,lime,p);pixel(cx,cy,1,-3,1,1,lime,p);
+ [[-2,-3],[0,-3],[2,-3]].forEach(([x,y])=>pixel(cx,cy,x,y,1,1,joint,p));
+ pixel(cx,cy,-3,-2,6,1,black,p);pixel(cx,cy,-2,-1,4,1,black,p);pixel(cx,cy,-1,0,2,1,black,p);pixel(cx,cy,-1,1,1,2,black,p);pixel(cx,cy,1,1,1,2,black,p);ctx.restore()}
 function draw(){
  const W=canvas.width,H=canvas.height;
  if(blueprintReady)ctx.drawImage(blueprint,0,0,W,H);else{ctx.fillStyle='#06151b';ctx.fillRect(0,0,W,H);return}
  ctx.fillStyle='#07191e';ctx.fillRect(1320,35,275,58);ctx.fillStyle='#f7bd54';ctx.font='32px VT323';ctx.textAlign='right';ctx.fillText('СИСТЕМЫ: '+done.size+' / 7',1575,77);ctx.textAlign='left';
  [[329,584],[445,444],[763,577],[788,359],[892,465],[1174,582],[1375,524]].forEach(([x,y])=>{ctx.fillStyle='#082329';ctx.fillRect(x-15,y-15,30,30)});
- ctx.fillStyle='#17413f';ctx.fillRect(623,486,35,30);ctx.strokeStyle='#b8fff0';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(623,486);ctx.lineTo(658,486);ctx.moveTo(623,516);ctx.lineTo(658,516);ctx.stroke();
+ drawAirlocks();ctx.fillStyle='#17413f';ctx.fillRect(623,486,35,30);ctx.strokeStyle='#b8fff0';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(623,486);ctx.lineTo(658,486);ctx.moveTo(623,516);ctx.lineTo(658,516);ctx.stroke();
  rooms.forEach(r=>{const fixed=done.has(r.id),selected=r.id===done.size+1,x=r.x*S,y=r.y*S,w=r.w*S,h=r.h*S;ctx.fillStyle='rgba(5,27,32,.94)';ctx.fillRect(x+3,y+3,w-6,h-6);ctx.strokeStyle='#082329';ctx.lineWidth=8;ctx.strokeRect(x,y,w,h);ctx.strokeStyle=selected?'#f7bd54':fixed?'#76e6c5':'#75b8b1';ctx.lineWidth=selected?4:2;if(selected){ctx.shadowColor='#f7bd54';ctx.shadowBlur=14}ctx.strokeRect(x,y,w,h);ctx.shadowBlur=0;ctx.fillStyle=selected?'#e9fff1':'#b9e6dd';ctx.font='16px VT323';ctx.fillText(('0'+r.id).slice(-2),x+8,y+19);const title=r.name;let size=15;do{ctx.font=size+'px VT323';size--}while(ctx.measureText(title).width>w-16&&size>7);ctx.fillText(title,x+8,y+h-7);const tx=(r.tx+.5)*S,ty=(r.ty+.5)*S;ctx.fillStyle=fixed?'#76e6c5':'#ef6b5d';ctx.fillRect(tx-6,ty-6,12,12);ctx.strokeStyle='#e2fff2';ctx.lineWidth=2;ctx.strokeRect(tx-7,ty-7,14,14)});
- let px=(player.x+.5)*S,py=(player.y+.5)*S;if(!roomAt(player.x,player.y))[px,py]=centeredPipePoint(px,py);ctx.fillStyle='#76e6c5';ctx.fillRect(px-4,py-4,8,8);ctx.strokeStyle='#e2fff2';ctx.lineWidth=1;ctx.strokeRect(px-5,py-5,10,10);ctx.fillStyle='#f7bd54';ctx.fillRect(px+1,py-1,2,2);
+ let px=(player.x+.5)*S,py=(player.y+.5)*S;if(!roomAt(player.x,player.y))[px,py]=centeredPipePoint(px,py);drawDrone(px,py);
  if(active){const tx=(active.tx+.5)*S,ty=(active.ty+.5)*S;ctx.strokeStyle='#f7bd54';ctx.lineWidth=2;ctx.strokeRect(tx-18,ty-18,36,36)}
  ctx.fillStyle='#07191e';ctx.fillRect(44,750,W-88,72);ctx.fillStyle='#e1f7ec';ctx.font='35px VT323';ctx.fillText(message.textContent,64,796);
  ctx.fillStyle='#07191e';ctx.fillRect(1370,655,225,80);ctx.fillStyle='#7fa4a5';ctx.font='18px VT323';['ДАТЧИКИ:  НОРМА','КОРПУС:   ЦЕЛ','ПИТАНИЕ:  '+done.size+' / 7'].forEach((t,i)=>ctx.fillText(t,1390,680+i*21));
