@@ -1,16 +1,24 @@
 const game=document.querySelector('#game'),canvas=document.querySelector('#map'),ctx=canvas.getContext('2d'),dialog=document.querySelector('#minigame'),content=document.querySelector('#minigame-content'),message=document.querySelector('#message'),status=document.querySelector('#system-status');
-const blueprint=new Image();let blueprintReady=false;blueprint.onload=()=>{blueprintReady=true;draw()};blueprint.src='assets/submarine-blueprint.png';
-const S=24,OX=130,OY=200,done=new Set();let player={x:3,y:11},active=null;
+const blueprint=new Image();let blueprintReady=false;blueprint.onload=()=>{blueprintReady=true;draw()};blueprint.src='assets/submarine-layout.png';
+const S=16,done=new Set();let player={x:17,y:35},active=null;
 const rooms=[
- {id:1,name:'РЕМОНТНЫЙ ОТСЕК',task:'power',x:2,y:7,w:6,h:6,tx:5,ty:10},
- {id:2,name:'ЭНЕРГООТСЕК',task:'pump',x:8,y:7,w:6,h:6,tx:11,ty:10},
- {id:3,name:'ГИДРОАКУСТИКА',task:'sonar',x:14,y:7,w:6,h:6,tx:17,ty:10},
- {id:4,name:'КАПИТАНСКИЙ МОСТИК',task:'code',x:20,y:7,w:6,h:6,tx:23,ty:10},
- {id:5,name:'КАЮТ-КОМПАНИЯ',task:'relay',x:26,y:7,w:6,h:6,tx:29,ty:10},
- {id:6,name:'КАМБУЗ / ОСУШЕНИЕ',task:'pump',x:32,y:7,w:6,h:6,tx:35,ty:10},
- {id:7,name:'ТРЮМ СВЯЗИ',task:'code',x:38,y:7,w:6,h:6,tx:41,ty:10}
+ {id:1,name:'РЕМОНТНЫЙ ОТСЕК',task:'power',x:15,y:33,w:7,h:5},
+ {id:2,name:'ЭНЕРГООТСЕК',task:'pump',x:24,y:24,w:7,h:5},
+ {id:3,name:'ГИДРОАКУСТИКА',task:'sonar',x:42,y:32,w:8,h:5},
+ {id:4,name:'КАПИТАНСКИЙ МОСТИК',task:'code',x:44,y:19,w:7,h:5},
+ {id:5,name:'КАЮТ-КОМПАНИЯ',task:'relay',x:52,y:26,w:9,h:5},
+ {id:6,name:'КАМБУЗ / ОСУШЕНИЕ',task:'pump',x:69,y:32,w:7,h:5},
+ {id:7,name:'ТРЮМ СВЯЗИ',task:'code',x:81,y:29,w:7,h:5}
 ];
-const corridors=[];
+rooms.forEach(r=>{r.tx=r.x+1+Math.floor(Math.random()*(r.w-2));r.ty=r.y+r.h-1});
+const corridors=[
+ [18,29,1,4],[18,29,6,1],[23,27,1,3],
+ [31,27,10,1],[36,27,1,6],[36,32,6,1],
+ [40,21,1,7],[40,21,4,1],
+ [47,24,1,3],[47,26,5,1],
+ [61,28,5,1],[65,28,1,6],[65,33,4,1],
+ [76,34,4,1],[79,31,1,4],[79,31,2,1]
+];
 const walk=new Set(),key=(x,y)=>x+','+y;
 function add(x,y,w,h){for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++)walk.add(key(i,j));}
 rooms.forEach(r=>add(r.x,r.y,r.w,r.h));corridors.forEach(c=>add(...c));
@@ -18,14 +26,14 @@ function roomAt(x,y){return rooms.find(r=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h)}
 function say(t){message.textContent='РМ-01: '+t}
 function reachable(x,y){const r=roomAt(x,y);return walk.has(key(x,y))&&(!r||r.id<=done.size+1)}
 function draw(){
- const W=canvas.width,H=canvas.height,visual=[
-  [228,404,151,155],[379,404,158,155],[537,404,166,155],[703,404,170,155],[873,404,167,155],[1040,404,167,155],[1207,404,165,155]
- ];
+ const W=canvas.width,H=canvas.height;
  if(blueprintReady)ctx.drawImage(blueprint,0,0,W,H);else{ctx.fillStyle='#06151b';ctx.fillRect(0,0,W,H);return}
  ctx.fillStyle='#07191e';ctx.fillRect(1320,35,275,58);ctx.fillStyle='#f7bd54';ctx.font='32px VT323';ctx.textAlign='right';ctx.fillText('СИСТЕМЫ: '+done.size+' / 7',1575,77);ctx.textAlign='left';
- rooms.forEach(r=>{const v=visual[r.id-1],fixed=done.has(r.id),selected=r.id===done.size+1,tx=v[0]+v[2]/2,ty=v[1]+v[3]*.56;if(selected){ctx.strokeStyle='#f7bd54';ctx.lineWidth=4;ctx.shadowColor='#f7bd54';ctx.shadowBlur=15;ctx.strokeRect(v[0]+3,v[1]+3,v[2]-6,v[3]-6);ctx.shadowBlur=0}ctx.fillStyle=fixed?'#76e6c5':'#ef6b5d';ctx.fillRect(tx-10,ty-10,20,20);ctx.strokeStyle='#e2fff2';ctx.lineWidth=2;ctx.strokeRect(tx-12,ty-12,24,24)});
- const current=roomAt(player.x,player.y);if(current){const v=visual[current.id-1],px=v[0]+(player.x-current.x+.5)*v[2]/current.w,py=v[1]+(player.y-current.y+.5)*v[3]/current.h;ctx.fillStyle='#76e6c5';ctx.fillRect(px-9,py-9,18,16);ctx.strokeStyle='#e2fff2';ctx.lineWidth=2;ctx.strokeRect(px-10,py-10,20,18);ctx.fillStyle='#f7bd54';ctx.fillRect(px+3,py-3,4,4)}
- if(active){const v=visual[active.id-1];ctx.strokeStyle='#f7bd54';ctx.lineWidth=2;ctx.strokeRect(v[0]+v[2]/2-27,v[1]+v[3]*.56-27,54,54)}
+ [[329,584],[445,444],[763,577],[788,359],[892,465],[1174,582],[1375,524]].forEach(([x,y])=>{ctx.fillStyle='#082329';ctx.fillRect(x-15,y-15,30,30)});
+ ctx.fillStyle='#17413f';ctx.fillRect(623,486,35,30);ctx.strokeStyle='#b8fff0';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(623,486);ctx.lineTo(658,486);ctx.moveTo(623,516);ctx.lineTo(658,516);ctx.stroke();
+ rooms.forEach(r=>{const fixed=done.has(r.id),selected=r.id===done.size+1,x=r.x*S,y=r.y*S,w=r.w*S,h=r.h*S;ctx.strokeStyle='#082329';ctx.lineWidth=10;ctx.strokeRect(x,y,w,h);ctx.strokeStyle=selected?'#f7bd54':fixed?'#76e6c5':'#75b8b1';ctx.lineWidth=selected?4:2;if(selected){ctx.shadowColor='#f7bd54';ctx.shadowBlur=14}ctx.strokeRect(x,y,w,h);ctx.shadowBlur=0;const tx=(r.tx+.5)*S,ty=(r.ty+.5)*S;ctx.fillStyle=fixed?'#76e6c5':'#ef6b5d';ctx.fillRect(tx-8,ty-8,16,16);ctx.strokeStyle='#e2fff2';ctx.lineWidth=2;ctx.strokeRect(tx-10,ty-10,20,20)});
+ const px=(player.x+.5)*S,py=(player.y+.5)*S;ctx.fillStyle='#76e6c5';ctx.fillRect(px-7,py-6,14,12);ctx.strokeStyle='#e2fff2';ctx.lineWidth=2;ctx.strokeRect(px-8,py-7,16,14);ctx.fillStyle='#f7bd54';ctx.fillRect(px+2,py-2,4,4);
+ if(active){const tx=(active.tx+.5)*S,ty=(active.ty+.5)*S;ctx.strokeStyle='#f7bd54';ctx.lineWidth=2;ctx.strokeRect(tx-18,ty-18,36,36)}
  ctx.fillStyle='#07191e';ctx.fillRect(44,750,W-88,72);ctx.fillStyle='#e1f7ec';ctx.font='35px VT323';ctx.fillText(message.textContent,64,796);
  ctx.fillStyle='#07191e';ctx.fillRect(1370,655,225,80);ctx.fillStyle='#7fa4a5';ctx.font='18px VT323';['ДАТЧИКИ:  НОРМА','КОРПУС:   ЦЕЛ','ПИТАНИЕ:  '+done.size+' / 7'].forEach((t,i)=>ctx.fillText(t,1390,680+i*21));
 }
