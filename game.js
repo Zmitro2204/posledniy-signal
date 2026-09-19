@@ -10,7 +10,7 @@ const rooms=[
  {id:6,name:'КАМБУЗ / ОСУШЕНИЕ',task:'pump',x:138,y:65,w:11,h:9},
  {id:7,name:'ТРЮМ СВЯЗИ',task:'code',x:163,y:59,w:13,h:8}
 ];
-rooms.forEach(r=>{const safe=[];for(let y=r.y+1;y<r.y+r.h-1;y++)for(let x=r.x+1;x<r.x+r.w-1;x++)if(!(x<r.x+5&&y<r.y+4))safe.push([x,y]);[r.tx,r.ty]=safe[Math.floor(Math.random()*safe.length)]});
+rooms.forEach(r=>{const safe=[];for(let y=r.y+1;y<r.y+r.h-2;y++)for(let x=r.x+1;x<r.x+r.w-1;x++)if(!(x<r.x+4&&y<r.y+4))safe.push([x,y]);[r.tx,r.ty]=safe[Math.floor(Math.random()*safe.length)]});
 const corridors=[
  [38,60,1,7],[38,60,9,1],[46,55,1,6],
  [61,53,21,1],[73,53,1,13],[73,65,11,1],
@@ -31,7 +31,7 @@ function draw(){
  ctx.fillStyle='#07191e';ctx.fillRect(1320,35,275,58);ctx.fillStyle='#f7bd54';ctx.font='32px VT323';ctx.textAlign='right';ctx.fillText('СИСТЕМЫ: '+done.size+' / 7',1575,77);ctx.textAlign='left';
  [[329,584],[445,444],[763,577],[788,359],[892,465],[1174,582],[1375,524]].forEach(([x,y])=>{ctx.fillStyle='#082329';ctx.fillRect(x-15,y-15,30,30)});
  ctx.fillStyle='#17413f';ctx.fillRect(623,486,35,30);ctx.strokeStyle='#b8fff0';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(623,486);ctx.lineTo(658,486);ctx.moveTo(623,516);ctx.lineTo(658,516);ctx.stroke();
- rooms.forEach(r=>{const fixed=done.has(r.id),selected=r.id===done.size+1,x=r.x*S,y=r.y*S,w=r.w*S,h=r.h*S;ctx.fillStyle='rgba(5,27,32,.94)';ctx.fillRect(x+3,y+3,w-6,h-6);ctx.strokeStyle='#082329';ctx.lineWidth=8;ctx.strokeRect(x,y,w,h);ctx.strokeStyle=selected?'#f7bd54':fixed?'#76e6c5':'#75b8b1';ctx.lineWidth=selected?4:2;if(selected){ctx.shadowColor='#f7bd54';ctx.shadowBlur=14}ctx.strokeRect(x,y,w,h);ctx.shadowBlur=0;ctx.fillStyle=selected?'#e9fff1':'#b9e6dd';ctx.font='16px VT323';const lines=[('0'+r.id).slice(-2),...r.name.replace(' /','/').split(' ')];lines.forEach((line,i)=>ctx.fillText(line,x+9,y+19+i*15));const tx=(r.tx+.5)*S,ty=(r.ty+.5)*S;ctx.fillStyle=fixed?'#76e6c5':'#ef6b5d';ctx.fillRect(tx-6,ty-6,12,12);ctx.strokeStyle='#e2fff2';ctx.lineWidth=2;ctx.strokeRect(tx-7,ty-7,14,14)});
+ rooms.forEach(r=>{const fixed=done.has(r.id),selected=r.id===done.size+1,x=r.x*S,y=r.y*S,w=r.w*S,h=r.h*S;ctx.fillStyle='rgba(5,27,32,.94)';ctx.fillRect(x+3,y+3,w-6,h-6);ctx.strokeStyle='#082329';ctx.lineWidth=8;ctx.strokeRect(x,y,w,h);ctx.strokeStyle=selected?'#f7bd54':fixed?'#76e6c5':'#75b8b1';ctx.lineWidth=selected?4:2;if(selected){ctx.shadowColor='#f7bd54';ctx.shadowBlur=14}ctx.strokeRect(x,y,w,h);ctx.shadowBlur=0;ctx.fillStyle=selected?'#e9fff1':'#b9e6dd';ctx.font='16px VT323';ctx.fillText(('0'+r.id).slice(-2),x+8,y+19);const title=r.name;let size=15;do{ctx.font=size+'px VT323';size--}while(ctx.measureText(title).width>w-16&&size>7);ctx.fillText(title,x+8,y+h-7);const tx=(r.tx+.5)*S,ty=(r.ty+.5)*S;ctx.fillStyle=fixed?'#76e6c5':'#ef6b5d';ctx.fillRect(tx-6,ty-6,12,12);ctx.strokeStyle='#e2fff2';ctx.lineWidth=2;ctx.strokeRect(tx-7,ty-7,14,14)});
  const px=(player.x+.5)*S,py=(player.y+.5)*S;ctx.fillStyle='#76e6c5';ctx.fillRect(px-4,py-4,8,8);ctx.strokeStyle='#e2fff2';ctx.lineWidth=1;ctx.strokeRect(px-5,py-5,10,10);ctx.fillStyle='#f7bd54';ctx.fillRect(px+1,py-1,2,2);
  if(active){const tx=(active.tx+.5)*S,ty=(active.ty+.5)*S;ctx.strokeStyle='#f7bd54';ctx.lineWidth=2;ctx.strokeRect(tx-18,ty-18,36,36)}
  ctx.fillStyle='#07191e';ctx.fillRect(44,750,W-88,72);ctx.fillStyle='#e1f7ec';ctx.font='35px VT323';ctx.fillText(message.textContent,64,796);
