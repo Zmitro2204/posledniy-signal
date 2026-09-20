@@ -6,7 +6,7 @@ const rooms=[
  {id:2,name:'ЭНЕРГООТСЕК',task:'tetris',x:48,y:49,w:13,h:8},
  {id:3,name:'ГИДРОАКУСТИКА',task:'sonar',x:84,y:66,w:15,h:8},
  {id:4,name:'КАПИТАНСКИЙ МОСТИК',task:'snake',x:88,y:38,w:13,h:8},
- {id:5,name:'КАЮТ-КОМПАНИЯ',task:'relay',x:105,y:52,w:16,h:7},
+ {id:5,name:'КАЮТ-КОМПАНИЯ',task:'tic',x:105,y:52,w:16,h:7},
  {id:6,name:'КАМБУЗ / ОСУШЕНИЕ',task:'pump',x:138,y:65,w:11,h:9},
  {id:7,name:'ТРЮМ СВЯЗИ',task:'code',x:163,y:59,w:13,h:8}
 ];
@@ -105,6 +105,19 @@ function sonar(id){
 }
 function code(id){const answer=id===4?'731':'407';let typed='';mount(id===4?'КАПИТАНСКИЙ МОСТИК':'ТРЮМ СВЯЗИ','Введите код доступа на терминале.','Код написан в самой задаче: для мостика — номер каюты 7, палубы 3, поста 1. Для трюма — сектор 4, ячейка 0, канал 7.','<div class="choices">'+[0,1,2,3,4,7].map(n=>'<button class="choice" data-n="'+n+'">'+n+'</button>').join('')+'</div><div class="mini-status">КОД: ———</div>');content.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{typed+=b.dataset.n;content.querySelector('.mini-status').textContent='КОД: '+typed;if(typed.length===3){if(typed===answer)finish(id);else {content.querySelector('.mini-status').textContent='НЕВЕРНО. СБРОС.';typed=''}}})}
 function relay(id){const correct=[2,0,3,1],input=[];mount('КАЮТ-КОМПАНИЯ','Перезапустите аварийное освещение: выберите четыре реле по порядку.','Слева направо лампы мигают: третья, первая, четвёртая, вторая.','<div class="choices">'+[0,1,2,3].map(n=>'<button class="choice" data-n="'+n+'">'+(n+1)+'</button>').join('')+'</div><div class="mini-status">ОЧЕРЕДЬ РЕЛЕ</div>');content.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{input.push(+b.dataset.n);if(input.at(-1)!==correct[input.length-1]){input.length=0;content.querySelector('.mini-status').textContent='СБРОС ЦЕПИ'}else if(input.length===4)finish(id)})}
-function open(r){({power,pump,tetris,snake,sonar,code,relay})[r.task](r.id);dialog.showModal()}
+function tic(id){const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]],order=[4,0,2,6,8,1,3,5,7];let board=Array(9).fill(''),busy=false,timer=null;
+ mount('КАЮТ-КОМПАНИЯ — КРЕСТИКИ-НОЛИКИ','ИИ ходит первым и просчитывает всю партию. Не дайте ему выиграть: ничья или победа восстанавливает систему.','Компьютер — X, вы — O. Он начинает с центральной клетки и ищет лучший ход.','<div class="grid" style="grid-template-columns:repeat(3,1fr);max-width:280px;margin:auto">'+board.map((_,i)=>'<button class="cell" data-i="'+i+'">·</button>').join('')+'</div><div class="mini-status">ИИ ВЫБИРАЕТ ПЕРВЫЙ ХОД…</div>');
+ const cells=[...content.querySelectorAll('.cell')],statusLine=content.querySelector('.mini-status');
+ function result(b){for(const [a,c,d] of lines)if(b[a]&&b[a]===b[c]&&b[a]===b[d])return b[a];return b.every(Boolean)?'D':''}
+ function minimax(b,computer,depth){const end=result(b);if(end==='X')return 10-depth;if(end==='O')return depth-10;if(end==='D')return 0;let best=computer?-Infinity:Infinity;for(const i of order)if(!b[i]){b[i]=computer?'X':'O';const value=minimax(b,!computer,depth+1);b[i]='';best=computer?Math.max(best,value):Math.min(best,value)}return best}
+ function bestMove(){let best=-Infinity,moves=[];for(const i of order)if(!board[i]){board[i]='X';const value=minimax(board,false,0);board[i]='';if(value>best){best=value;moves=[i]}else if(value===best)moves.push(i)}return moves[0]}
+ function render(){cells.forEach((b,i)=>{b.textContent=board[i]||'·';b.style.color=board[i]==='X'?'#f7bd54':board[i]==='O'?'#76e6c5':'#6d9890';b.style.background=board[i]?'#153138':'#10242a'})}
+ function reset(){board=Array(9).fill('');busy=true;render();statusLine.textContent='ИИ ВЫБИРАЕТ ПЕРВЫЙ ХОД…';timer=setTimeout(computer,350)}
+ function finishRound(end){if(end==='X'){busy=true;statusLine.textContent='ИИ ВЫИГРАЛ. НОВАЯ ПАРТИЯ…';timer=setTimeout(reset,850)}else{busy=true;statusLine.textContent=end==='O'?'ВЫ ПОБЕДИЛИ. СИСТЕМА ЗАПУЩЕНА.':'НИЧЬЯ. СИСТЕМА ВЫДЕРЖАЛА НАГРУЗКУ.';timer=setTimeout(()=>finish(id),450)}}
+ function computer(){const move=bestMove();if(move===undefined)return;board[move]='X';busy=false;render();const end=result(board);if(end)finishRound(end);else statusLine.textContent='ВАШ ХОД — O'}
+ cells.forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(busy||board[i])return;board[i]='O';render();const end=result(board);if(end){finishRound(end);return}busy=true;statusLine.textContent='ИИ АНАЛИЗИРУЕТ…';timer=setTimeout(computer,300)});
+ dialogCleanup=()=>{clearTimeout(timer)};reset()
+}
+function open(r){({power,pump,tetris,snake,sonar,code,relay,tic})[r.task](r.id);dialog.showModal()}
 window.addEventListener('keydown',e=>{if(dialog.open){if(e.key==='Escape'){dialogCleanup?.();dialogCleanup=null;dialogKeyHandler=null;dialog.close()}else dialogKeyHandler?.(e);return}const d={ArrowLeft:[-1,0],a:[-1,0],A:[-1,0],ArrowRight:[1,0],d:[1,0],D:[1,0],ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowDown:[0,1],s:[0,1],S:[0,1]}[e.key];if(d){e.preventDefault();let x=player.x+d[0],y=player.y+d[1];if(reachable(x,y)){player={x,y};movingUntil=Date.now()+360}else say(initialRepairLocked(x,y)?'Сначала восстановите щит питания в этом отсеке.':'Здесь сплошная переборка или закрытый шлюз.');update()}if((e.key==='e'||e.key==='E')&&active)open(active);if(e.key==='r'||e.key==='R')say(active?'ЦЕЛЬ: '+active.name+'. Подлетите к центральному терминалу и нажмите E.':'ЦЕЛЬ: найдите красный терминал в доступном отсеке.');});
 document.querySelector('#close-game').onclick=()=>{dialogCleanup?.();dialogCleanup=null;dialogKeyHandler=null;dialog.close()};game.addEventListener('click',()=>game.focus());game.focus();update();requestAnimationFrame(animateRepairFrames);
