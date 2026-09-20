@@ -33,12 +33,11 @@ const pipeSegments=[[309,536,309,482],[309,482,372,482],[372,482,372,428],[372,4
 function centeredPipePoint(px,py){let best=null;for(const [x1,y1,x2,y2] of pipeSegments){const dx=x2-x1,dy=y2-y1,len=dx*dx+dy*dy,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/len)),x=x1+dx*t,y=y1+dy*t,d=(px-x)*(px-x)+(py-y)*(py-y);if(!best||d<best.d)best={x,y,d}}return best?[best.x,best.y]:[px,py]}
 function drawAirlocks(){ctx.save();ctx.lineCap='square';ctx.lineJoin='round';for(const [x1,y1,x2,y2] of pipeSegments){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle='rgba(3,24,29,.92)';ctx.lineWidth=52;ctx.stroke();ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle='rgba(43,164,151,.72)';ctx.lineWidth=40;ctx.stroke();ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle='#b8fff0';ctx.shadowColor='#76e6c5';ctx.shadowBlur=12;ctx.lineWidth=3;ctx.stroke()}ctx.restore()}
 function pixel(cx,cy,x,y,w,h,color,p=3){ctx.fillStyle=color;ctx.fillRect(cx+x*p,cy+y*p,w*p,h*p)}
-function drawDrone(cx,cy){ctx.save();ctx.imageSmoothingEnabled=false;const p=7,wire='#1b2227',gray='#b9b8c5',orange='#ff9518',redOn='#ff5c4e',blueOn='#54a9ff',redOff='#572b30',blueOff='#27364f',moving=Date.now()<movingUntil,redPhase=Math.floor(Date.now()/115)%2===0;
+function drawDrone(cx,cy){ctx.save();ctx.imageSmoothingEnabled=false;const p=7,yellow='#fff04d',orange='#ff9518',redOn='#ff5c4e',blueOn='#54a9ff',redOff='#572b30',blueOff='#27364f',moving=Date.now()<movingUntil,redPhase=Math.floor(Date.now()/115)%2===0;
  // Пиксельный ремонтный модуль с присланного образца: два маяка и блок из четырёх панелей.
- pixel(cx,cy,-3,-2,2,1,wire,p);pixel(cx,cy,1,-2,2,1,wire,p);
- pixel(cx,cy,-4,-2,1,1,moving&&redPhase?redOn:redOff,p);pixel(cx,cy,3,-2,1,1,moving&&!redPhase?blueOn:blueOff,p);
- if(moving){ctx.shadowBlur=10;ctx.shadowColor=redPhase?redOn:blueOn;pixel(cx,cy,redPhase?-4:3,-2,1,1,redPhase?redOn:blueOn,p);ctx.shadowBlur=0}
- pixel(cx,cy,-1,-1,1,1,gray,p);pixel(cx,cy,0,-1,1,1,orange,p);pixel(cx,cy,-1,0,1,1,orange,p);pixel(cx,cy,0,0,1,1,gray,p);ctx.restore()}
+ pixel(cx,cy,-2,-1,1,1,moving&&redPhase?redOn:redOff,p);pixel(cx,cy,1,-1,1,1,moving&&!redPhase?blueOn:blueOff,p);
+ if(moving){ctx.shadowBlur=10;ctx.shadowColor=redPhase?redOn:blueOn;pixel(cx,cy,redPhase?-2:1,-1,1,1,redPhase?redOn:blueOn,p);ctx.shadowBlur=0}
+ pixel(cx,cy,-1,-1,1,1,yellow,p);pixel(cx,cy,0,-1,1,1,orange,p);pixel(cx,cy,-1,0,1,1,orange,p);pixel(cx,cy,0,0,1,1,yellow,p);ctx.restore()}
 function draw(){
  const W=canvas.width,H=canvas.height;
  if(blueprintReady)ctx.drawImage(blueprint,0,0,W,H);else{ctx.fillStyle='#06151b';ctx.fillRect(0,0,W,H);return}
