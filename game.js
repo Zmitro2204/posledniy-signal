@@ -31,7 +31,10 @@ function say(t){message.textContent='РМ-01: '+t}
 function reachable(x,y){const r=roomAt(x,y);return walk.has(key(x,y))&&(!r||r.id<=done.size+1)}
 const pipeSegments=[[309,536,309,482],[309,482,372,482],[372,482,372,428],[372,428,488,428],[488,428,648,428],[648,428,648,344],[648,344,704,344],[588,428,588,512],[588,512,716,512],[716,512,716,528],[760,374,760,448],[760,448,840,448],[968,448,1032,448],[1032,448,1032,544],[1032,544,1100,544],[1190,552,1272,552],[1272,552,1272,504],[1272,504,1300,504]];
 function centeredPipePoint(px,py){let best=null;for(const [x1,y1,x2,y2] of pipeSegments){const dx=x2-x1,dy=y2-y1,len=dx*dx+dy*dy,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/len)),x=x1+dx*t,y=y1+dy*t,d=(px-x)*(px-x)+(py-y)*(py-y);if(!best||d<best.d)best={x,y,d}}return best?[best.x,best.y]:[px,py]}
-function drawAirlocks(){ctx.save();ctx.lineCap='square';ctx.lineJoin='round';for(const [x1,y1,x2,y2] of pipeSegments){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle='rgba(3,24,29,.92)';ctx.lineWidth=52;ctx.stroke();ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle='rgba(43,164,151,.72)';ctx.lineWidth=40;ctx.stroke();ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle='#b8fff0';ctx.shadowColor='#76e6c5';ctx.shadowBlur=12;ctx.lineWidth=3;ctx.stroke()}ctx.restore()}
+function drawAirlocks(){ctx.save();ctx.lineCap='square';ctx.lineJoin='round';const trace=()=>{ctx.beginPath();for(const [x1,y1,x2,y2] of pipeSegments){ctx.moveTo(x1,y1);ctx.lineTo(x2,y2)}};
+ trace();ctx.strokeStyle='#04191d';ctx.lineWidth=54;ctx.stroke();
+ trace();ctx.strokeStyle='#247c77';ctx.lineWidth=42;ctx.stroke();
+ trace();ctx.strokeStyle='#9bf6df';ctx.shadowColor='#76e6c5';ctx.shadowBlur=10;ctx.lineWidth=3;ctx.stroke();ctx.restore()}
 function pixel(cx,cy,x,y,w,h,color,p=3){ctx.fillStyle=color;ctx.fillRect(cx+x*p,cy+y*p,w*p,h*p)}
 function drawDrone(cx,cy){ctx.save();ctx.imageSmoothingEnabled=false;const p=7,yellow='#fff04d',orange='#ff9518',redOn='#ff5c4e',blueOn='#54a9ff',redOff='#572b30',blueOff='#27364f',moving=Date.now()<movingUntil,redPhase=Math.floor(Date.now()/115)%2===0;
  // Пиксельный ремонтный модуль с присланного образца: два маяка и блок из четырёх панелей.
