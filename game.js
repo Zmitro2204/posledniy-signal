@@ -1,5 +1,5 @@
 const game=document.querySelector('#game'),canvas=document.querySelector('#map'),ctx=canvas.getContext('2d'),dialog=document.querySelector('#minigame'),content=document.querySelector('#minigame-content'),message=document.querySelector('#message'),status=document.querySelector('#system-status');
-const blueprint=new Image();let blueprintReady=false;blueprint.onload=()=>{blueprintReady=true;draw()};blueprint.src='assets/submarine-layout.png';
+const blueprint=new Image();let blueprintReady=false;blueprint.onload=()=>{blueprintReady=true;draw()};blueprint.src='assets/submarine-layout.png?v=layout-2';
 const S=8,done=new Set(),scoreKey='posledniy-signal-top5',usedNameKey='posledniy-signal-used-names';let player={x:39,y:70},active=null,movingUntil=0,dialogKeyHandler=null,dialogCleanup=null,sessionReady=false,playerName='',runStartedAt=0,runFinished=false;
 let audioCtx=null,ambientStarted=false,ambientTimer=0,lastDroneChirp=0;
 function audio(){if(!audioCtx){const Engine=window.AudioContext||window.webkitAudioContext;if(!Engine)return null;audioCtx=new Engine()}if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx}
@@ -66,7 +66,7 @@ function drawDrone(cx,cy){ctx.save();ctx.imageSmoothingEnabled=false;const p=7,y
  pixel(cx,cy,-1,-1,1,1,yellow,p);pixel(cx,cy,0,-1,1,1,orange,p);pixel(cx,cy,-1,0,1,1,orange,p);pixel(cx,cy,0,0,1,1,yellow,p);ctx.restore()}
 function draw(){
  const W=canvas.width,H=canvas.height;
- if(blueprintReady){ctx.drawImage(blueprint,0,0,W,H);drawLowerHullExtension()}else{ctx.fillStyle='#06151b';ctx.fillRect(0,0,W,H);return}
+ blueprintReady=blueprintReady||(blueprint.complete&&blueprint.naturalWidth>0);if(blueprintReady){ctx.drawImage(blueprint,0,0,W,H);drawLowerHullExtension()}else{ctx.fillStyle='#06151b';ctx.fillRect(0,0,W,H);return}
  ctx.fillStyle='#07191e';ctx.fillRect(1250,30,370,68);ctx.fillStyle='#f7bd54';ctx.font='32px VT323';ctx.textAlign='right';ctx.fillText('СИСТЕМЫ: '+done.size+' / '+rooms.length,1600,77);ctx.textAlign='left';
  ctx.fillStyle='#06151b';ctx.fillRect(1350,640,270,105);
  drawLeaderboard();
