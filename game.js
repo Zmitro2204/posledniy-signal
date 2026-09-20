@@ -15,14 +15,14 @@ const rooms=[
  {id:5,name:'КАЮТ-КОМПАНИЯ',task:'tic',x:105,y:52,w:16,h:7},
  {id:6,name:'КАМБУЗ / ОСУШЕНИЕ',task:'galaga',x:138,y:65,w:11,h:9},
  {id:7,name:'ТРЮМ СВЯЗИ',task:'mahjong',x:163,y:59,w:13,h:8},
- {id:8,name:'ОТСЕК ВЕЩЕВОЙ',task:'cargo',x:145,y:44,w:14,h:8},
+ {id:8,name:'ОТСЕК ВЕЩЕВОЙ',task:'cargo',x:145,y:51,w:14,h:8},
  {id:9,name:'ГАУПТВАХТА',task:'lock',x:111,y:70,w:15,h:9},
  {id:10,name:'КУБРИК',task:'berth',x:67,y:70,w:14,h:9},
  {id:11,name:'ТОРПЕДНЫЙ',task:'torpedo',x:15,y:57,w:13,h:8}
 ];
 // Терминалы намеренно стоят в разных местах, но их координаты постоянны:
 // карта должна одинаково выглядеть во всех браузерах и после перезагрузки.
-[[42,70],[57,53],[95,69],[97,44],[116,55],[145,70],[172,62],[152,48],[119,75],[75,75],[22,62]].forEach(([tx,ty],i)=>{rooms[i].tx=tx;rooms[i].ty=ty});
+[[42,70],[57,53],[95,69],[97,44],[116,55],[145,70],[172,62],[152,55],[119,75],[75,75],[22,62]].forEach(([tx,ty],i)=>{rooms[i].tx=tx;rooms[i].ty=ty});
 const corridors=[
  [38,60,1,7],[38,60,9,1],[46,55,1,6],[46,55,2,1],
  [61,53,21,1],[73,53,1,12],[73,64,17,1],[89,64,1,2],
@@ -53,6 +53,7 @@ function reachable(x,y){const r=roomAt(x,y);return !initialRepairLocked(x,y)&&wa
 const pipeSegments=[[309,536,309,482],[309,482,372,482],[372,482,372,428],[372,428,488,428],[488,428,648,428],[648,428,648,344],[648,344,704,344],[588,428,588,512],[588,512,716,512],[716,512,716,528],[760,374,760,448],[760,448,840,448],[968,448,1032,448],[1032,448,1032,544],[1032,544,1100,544],[1190,552,1272,552],[1272,552,1272,504],[1272,504,1300,504]];
 const upperPipeSegments=[[1272,384,1272,600],[1008,592,1272,592],[1008,592,1008,608],[888,624,888,640],[648,632,888,632],[648,624,648,640],[224,504,224,528],[224,528,544,528],[536,528,536,560]];
 function centeredPipePoint(px,py){let best=null;for(const [x1,y1,x2,y2] of [...pipeSegments,...upperPipeSegments]){const dx=x2-x1,dy=y2-y1,len=dx*dx+dy*dy,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/len)),x=x1+dx*t,y=y1+dy*t,d=(px-x)*(px-x)+(py-y)*(py-y);if(!best||d<best.d)best={x,y,d}}return best?[best.x,best.y]:[px,py]}
+function drawLowerHullExtension(){ctx.save();ctx.beginPath();ctx.moveTo(95,560);ctx.bezierCurveTo(170,620,260,676,420,692);ctx.lineTo(1275,692);ctx.bezierCurveTo(1450,684,1540,630,1580,552);ctx.lineTo(1580,650);ctx.bezierCurveTo(1510,716,1400,744,1260,750);ctx.lineTo(370,750);ctx.bezierCurveTo(210,744,112,680,70,590);ctx.closePath();ctx.fillStyle='#071c22';ctx.fill();ctx.strokeStyle='#6cb9b5';ctx.lineWidth=3;ctx.shadowColor='#4aa6a1';ctx.shadowBlur=7;ctx.stroke();ctx.shadowBlur=0;ctx.restore()}
 function drawAirlocks(){ctx.save();ctx.lineCap='square';ctx.lineJoin='round';const trace=()=>{ctx.beginPath();for(const [x1,y1,x2,y2] of [...pipeSegments,...upperPipeSegments]){ctx.moveTo(x1,y1);ctx.lineTo(x2,y2)}};
  trace();ctx.strokeStyle='#04191d';ctx.lineWidth=54;ctx.stroke();
  trace();ctx.strokeStyle='#247c77';ctx.lineWidth=42;ctx.stroke();
@@ -65,7 +66,7 @@ function drawDrone(cx,cy){ctx.save();ctx.imageSmoothingEnabled=false;const p=7,y
  pixel(cx,cy,-1,-1,1,1,yellow,p);pixel(cx,cy,0,-1,1,1,orange,p);pixel(cx,cy,-1,0,1,1,orange,p);pixel(cx,cy,0,0,1,1,yellow,p);ctx.restore()}
 function draw(){
  const W=canvas.width,H=canvas.height;
- if(blueprintReady)ctx.drawImage(blueprint,0,0,W,H);else{ctx.fillStyle='#06151b';ctx.fillRect(0,0,W,H);return}
+ if(blueprintReady){ctx.drawImage(blueprint,0,0,W,H);drawLowerHullExtension()}else{ctx.fillStyle='#06151b';ctx.fillRect(0,0,W,H);return}
  ctx.fillStyle='#07191e';ctx.fillRect(1250,30,370,68);ctx.fillStyle='#f7bd54';ctx.font='32px VT323';ctx.textAlign='right';ctx.fillText('СИСТЕМЫ: '+done.size+' / '+rooms.length,1600,77);ctx.textAlign='left';
  ctx.fillStyle='#06151b';ctx.fillRect(1350,640,270,105);
  drawLeaderboard();
