@@ -58,10 +58,10 @@ function centeredPipePoint(px,py){let best=null;for(const [x1,y1,x2,y2] of [...p
 function drawLowerHullExtension(){
  // Утолщаем только нижнюю часть корпуса: без второго внутреннего контура.
  // Поверх фона остаётся один внешний обвод лодки, а нижние отсеки лежат внутри него.
- ctx.save();ctx.beginPath();ctx.moveTo(74,540);ctx.lineTo(1598,540);ctx.lineTo(1598,594);
- ctx.bezierCurveTo(1542,695,1436,734,1264,748);ctx.lineTo(370,748);
- ctx.bezierCurveTo(206,742,108,681,74,594);ctx.closePath();ctx.fillStyle='#071c22';ctx.fill();
- ctx.beginPath();ctx.moveTo(74,594);ctx.bezierCurveTo(108,681,206,742,370,748);ctx.lineTo(1264,748);ctx.bezierCurveTo(1436,734,1542,695,1598,594);
+ ctx.save();ctx.beginPath();ctx.moveTo(74,560);ctx.lineTo(1598,560);ctx.lineTo(1598,590);
+ ctx.bezierCurveTo(1544,663,1435,696,1262,708);ctx.lineTo(370,708);
+ ctx.bezierCurveTo(207,703,110,656,74,590);ctx.closePath();ctx.fillStyle='#071c22';ctx.fill();
+ ctx.beginPath();ctx.moveTo(74,590);ctx.bezierCurveTo(110,656,207,703,370,708);ctx.lineTo(1262,708);ctx.bezierCurveTo(1435,696,1544,663,1598,590);
  ctx.strokeStyle='#6cb9b5';ctx.lineWidth=3;ctx.shadowColor='#4aa6a1';ctx.shadowBlur=7;ctx.stroke();ctx.restore()
 }
 function drawAirlocks(){ctx.save();ctx.lineCap='square';ctx.lineJoin='round';const trace=()=>{ctx.beginPath();for(const [x1,y1,x2,y2] of [...pipeSegments,...upperPipeSegments]){ctx.moveTo(x1,y1);ctx.lineTo(x2,y2)}};
