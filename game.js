@@ -1,5 +1,7 @@
 const game=document.querySelector('#game'),canvas=document.querySelector('#map'),ctx=canvas.getContext('2d'),dialog=document.querySelector('#minigame'),content=document.querySelector('#minigame-content'),message=document.querySelector('#message'),status=document.querySelector('#system-status');
-const blueprint=new Image();let blueprintReady=false;blueprint.onload=()=>{blueprintReady=true;draw()};blueprint.src='assets/submarine-layout.png?v=layout-2';
+// Предзагрузка через DOM-элемент устраняет редкий сбой Safari, когда new Image()
+// уже загружен, но Canvas получает пустой кадр.
+const blueprint=document.querySelector('#blueprint-source');let blueprintReady=blueprint.complete&&blueprint.naturalWidth>0;blueprint.onload=()=>{blueprintReady=true;draw()};
 const S=8,done=new Set(),scoreKey='posledniy-signal-top5',usedNameKey='posledniy-signal-used-names';let player={x:39,y:70},active=null,movingUntil=0,dialogKeyHandler=null,dialogCleanup=null,sessionReady=false,playerName='',runStartedAt=0,runFinished=false;
 let audioCtx=null,ambientStarted=false,ambientTimer=0,lastDroneChirp=0;
 function audio(){if(!audioCtx){const Engine=window.AudioContext||window.webkitAudioContext;if(!Engine)return null;audioCtx=new Engine()}if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx}
