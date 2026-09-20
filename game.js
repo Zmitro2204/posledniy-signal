@@ -65,7 +65,7 @@ function drawDrone(cx,cy){ctx.save();ctx.imageSmoothingEnabled=false;const p=7,y
  pixel(cx,cy,-1,-1,1,1,yellow,p);pixel(cx,cy,0,-1,1,1,orange,p);pixel(cx,cy,-1,0,1,1,orange,p);pixel(cx,cy,0,0,1,1,yellow,p);ctx.restore()}
 function draw(){
  const W=canvas.width,H=canvas.height;
- if(blueprintReady)ctx.drawImage(blueprint,0,0,W,H);else{ctx.fillStyle='#06151b';ctx.fillRect(0,0,W,H);return}
+ if(blueprintReady){ctx.drawImage(blueprint,0,0,W,H);/* Растягиваем только корпус: служебные подписи вокруг него менее важны, чем читаемый контур для новых палуб. */ctx.drawImage(blueprint,0,300,W,330,0,235,W,520)}else{ctx.fillStyle='#06151b';ctx.fillRect(0,0,W,H);return}
  ctx.fillStyle='#07191e';ctx.fillRect(1320,35,275,58);ctx.fillStyle='#f7bd54';ctx.font='32px VT323';ctx.textAlign='right';ctx.fillText('СИСТЕМЫ: '+done.size+' / '+rooms.length,1575,77);ctx.textAlign='left';
  drawLeaderboard();
  [[329,584],[445,444],[763,577],[788,359],[892,465],[1174,582],[1375,524],[1216,384],[952,600],[600,600],[176,496]].forEach(([x,y])=>{ctx.fillStyle='#082329';ctx.fillRect(x-15,y-15,30,30)});
