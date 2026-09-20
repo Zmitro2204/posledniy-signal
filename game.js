@@ -14,11 +14,15 @@ const rooms=[
  {id:4,name:'КАПИТАНСКИЙ МОСТИК',task:'snake',x:88,y:38,w:13,h:8},
  {id:5,name:'КАЮТ-КОМПАНИЯ',task:'tic',x:105,y:52,w:16,h:7},
  {id:6,name:'КАМБУЗ / ОСУШЕНИЕ',task:'galaga',x:138,y:65,w:11,h:9},
- {id:7,name:'ТРЮМ СВЯЗИ',task:'mahjong',x:163,y:59,w:13,h:8}
+ {id:7,name:'ТРЮМ СВЯЗИ',task:'mahjong',x:163,y:59,w:13,h:8},
+ {id:8,name:'ОТСЕК ВЕЩЕВОЙ',task:'cargo',x:145,y:44,w:14,h:8},
+ {id:9,name:'ГАУПТВАХТА',task:'lock',x:111,y:70,w:15,h:9},
+ {id:10,name:'КУБРИК',task:'berth',x:67,y:70,w:14,h:9},
+ {id:11,name:'ТОРПЕДНЫЙ',task:'torpedo',x:15,y:57,w:13,h:8}
 ];
 // Терминалы намеренно стоят в разных местах, но их координаты постоянны:
 // карта должна одинаково выглядеть во всех браузерах и после перезагрузки.
-[[42,70],[57,53],[95,69],[97,44],[116,55],[145,70],[172,62]].forEach(([tx,ty],i)=>{rooms[i].tx=tx;rooms[i].ty=ty});
+[[42,70],[57,53],[95,69],[97,44],[116,55],[145,70],[172,62],[152,48],[119,75],[75,75],[22,62]].forEach(([tx,ty],i)=>{rooms[i].tx=tx;rooms[i].ty=ty});
 const corridors=[
  [38,60,1,7],[38,60,9,1],[46,55,1,6],[46,55,2,1],
  [61,53,21,1],[73,53,1,12],[73,64,17,1],[89,64,1,2],
@@ -28,6 +32,9 @@ const corridors=[
  [95,46,1,10],[95,55,10,1],
  [121,56,9,1],[129,56,1,13],[129,68,9,1],
  [149,69,10,1],[159,63,1,7],[159,63,4,1]
+ ,[159,48,5,1],[159,48,1,27],[126,74,34,1],[126,74,1,2],
+ [110,78,1,2],[81,79,30,1],[81,78,1,2],
+ [28,63,1,4],[28,66,40,1],[67,66,1,4]
 ];
 const walk=new Set(),key=(x,y)=>x+','+y;
 function add(x,y,w,h){for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++)walk.add(key(i,j));}
@@ -44,8 +51,9 @@ function showIntro(){if(dialog.open||sessionReady)return;const transcript='РМ-
 function initialRepairLocked(x,y){const here=roomAt(player.x,player.y),there=roomAt(x,y);return done.size===0&&here?.id===1&&there?.id!==1}
 function reachable(x,y){const r=roomAt(x,y);return !initialRepairLocked(x,y)&&walk.has(key(x,y))&&(!r||r.id<=done.size+1)}
 const pipeSegments=[[309,536,309,482],[309,482,372,482],[372,482,372,428],[372,428,488,428],[488,428,648,428],[648,428,648,344],[648,344,704,344],[588,428,588,512],[588,512,716,512],[716,512,716,528],[760,374,760,448],[760,448,840,448],[968,448,1032,448],[1032,448,1032,544],[1032,544,1100,544],[1190,552,1272,552],[1272,552,1272,504],[1272,504,1300,504]];
-function centeredPipePoint(px,py){let best=null;for(const [x1,y1,x2,y2] of pipeSegments){const dx=x2-x1,dy=y2-y1,len=dx*dx+dy*dy,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/len)),x=x1+dx*t,y=y1+dy*t,d=(px-x)*(px-x)+(py-y)*(py-y);if(!best||d<best.d)best={x,y,d}}return best?[best.x,best.y]:[px,py]}
-function drawAirlocks(){ctx.save();ctx.lineCap='square';ctx.lineJoin='round';const trace=()=>{ctx.beginPath();for(const [x1,y1,x2,y2] of pipeSegments){ctx.moveTo(x1,y1);ctx.lineTo(x2,y2)}};
+const upperPipeSegments=[[1272,384,1272,600],[1008,592,1272,592],[1008,592,1008,608],[888,624,888,640],[648,632,888,632],[648,624,648,640],[224,504,224,528],[224,528,544,528],[536,528,536,560]];
+function centeredPipePoint(px,py){let best=null;for(const [x1,y1,x2,y2] of [...pipeSegments,...upperPipeSegments]){const dx=x2-x1,dy=y2-y1,len=dx*dx+dy*dy,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/len)),x=x1+dx*t,y=y1+dy*t,d=(px-x)*(px-x)+(py-y)*(py-y);if(!best||d<best.d)best={x,y,d}}return best?[best.x,best.y]:[px,py]}
+function drawAirlocks(){ctx.save();ctx.lineCap='square';ctx.lineJoin='round';const trace=()=>{ctx.beginPath();for(const [x1,y1,x2,y2] of [...pipeSegments,...upperPipeSegments]){ctx.moveTo(x1,y1);ctx.lineTo(x2,y2)}};
  trace();ctx.strokeStyle='#04191d';ctx.lineWidth=54;ctx.stroke();
  trace();ctx.strokeStyle='#247c77';ctx.lineWidth=42;ctx.stroke();
  trace();ctx.strokeStyle='#9bf6df';ctx.shadowColor='#76e6c5';ctx.shadowBlur=10;ctx.lineWidth=3;ctx.stroke();ctx.restore()}
@@ -58,19 +66,19 @@ function drawDrone(cx,cy){ctx.save();ctx.imageSmoothingEnabled=false;const p=7,y
 function draw(){
  const W=canvas.width,H=canvas.height;
  if(blueprintReady)ctx.drawImage(blueprint,0,0,W,H);else{ctx.fillStyle='#06151b';ctx.fillRect(0,0,W,H);return}
- ctx.fillStyle='#07191e';ctx.fillRect(1320,35,275,58);ctx.fillStyle='#f7bd54';ctx.font='32px VT323';ctx.textAlign='right';ctx.fillText('СИСТЕМЫ: '+done.size+' / 7',1575,77);ctx.textAlign='left';
+ ctx.fillStyle='#07191e';ctx.fillRect(1320,35,275,58);ctx.fillStyle='#f7bd54';ctx.font='32px VT323';ctx.textAlign='right';ctx.fillText('СИСТЕМЫ: '+done.size+' / '+rooms.length,1575,77);ctx.textAlign='left';
  drawLeaderboard();
- [[329,584],[445,444],[763,577],[788,359],[892,465],[1174,582],[1375,524]].forEach(([x,y])=>{ctx.fillStyle='#082329';ctx.fillRect(x-15,y-15,30,30)});
+ [[329,584],[445,444],[763,577],[788,359],[892,465],[1174,582],[1375,524],[1216,384],[952,600],[600,600],[176,496]].forEach(([x,y])=>{ctx.fillStyle='#082329';ctx.fillRect(x-15,y-15,30,30)});
  drawAirlocks();
  rooms.forEach(r=>{const fixed=done.has(r.id),needsRepair=!fixed,pulse=.72+.28*(Math.sin(Date.now()/260)+1)/2,x=r.x*S,y=r.y*S,w=r.w*S,h=r.h*S;ctx.fillStyle='rgba(5,27,32,.94)';ctx.fillRect(x+3,y+3,w-6,h-6);ctx.strokeStyle='#082329';ctx.lineWidth=8;ctx.strokeRect(x,y,w,h);ctx.save();ctx.strokeStyle=fixed?'#8dffd4':'#f7bd54';ctx.lineWidth=fixed?4:3;ctx.globalAlpha=fixed?1:pulse;if(needsRepair){ctx.shadowColor='#f7bd54';ctx.shadowBlur=8+8*pulse}ctx.strokeRect(x,y,w,h);ctx.restore();ctx.fillStyle=fixed?'#d7fff0':'#f7d28a';ctx.font='16px VT323';ctx.fillText(('0'+r.id).slice(-2),x+8,y+19);const title=r.name;let size=15;do{ctx.font=size+'px VT323';size--}while(ctx.measureText(title).width>w-16&&size>7);ctx.fillText(title,x+8,y+h-7);const tx=(r.tx+.5)*S,ty=(r.ty+.5)*S;ctx.fillStyle=fixed?'#76e6c5':'#ef6b5d';ctx.fillRect(tx-6,ty-6,12,12);ctx.strokeStyle='#e2fff2';ctx.lineWidth=2;ctx.strokeRect(tx-7,ty-7,14,14)});
  let px=(player.x+.5)*S,py=(player.y+.5)*S;if(!roomAt(player.x,player.y))[px,py]=centeredPipePoint(px,py);drawDrone(px,py);
  if(active){const tx=(active.tx+.5)*S,ty=(active.ty+.5)*S;ctx.strokeStyle='#f7bd54';ctx.lineWidth=2;ctx.strokeRect(tx-18,ty-18,36,36)}
  ctx.fillStyle='#07191e';ctx.fillRect(44,750,W-88,72);ctx.fillStyle='#e1f7ec';ctx.font='35px VT323';ctx.fillText(message.textContent,64,796);
- ctx.fillStyle='#07191e';ctx.fillRect(1370,655,225,80);ctx.fillStyle='#7fa4a5';ctx.font='18px VT323';['ДАТЧИКИ:  НОРМА','КОРПУС:   ЦЕЛ','ПИТАНИЕ:  '+done.size+' / 7'].forEach((t,i)=>ctx.fillText(t,1390,680+i*21));
+ ctx.fillStyle='#07191e';ctx.fillRect(1370,655,225,80);ctx.fillStyle='#7fa4a5';ctx.font='18px VT323';['ДАТЧИКИ:  НОРМА','КОРПУС:   ЦЕЛ','ПИТАНИЕ:  '+done.size+' / '+rooms.length].forEach((t,i)=>ctx.fillText(t,1390,680+i*21));
 }
 function update(){const r=roomAt(player.x,player.y);active=r&&!done.has(r.id)&&Math.abs(player.x-r.tx)+Math.abs(player.y-r.ty)<=1?r:null;draw();}
 function animateRepairFrames(){draw();requestAnimationFrame(animateRepairFrames)}
-function finish(id){sfx.success();dialogCleanup?.();dialogCleanup=null;dialogKeyHandler=null;done.add(id);status.textContent='СИСТЕМЫ: '+done.size+' / 7';dialog.close();if(done.size===7)recordScore();else say('Система восстановлена. Открыт следующий шлюз.');game.focus();update()}
+function finish(id){sfx.success();dialogCleanup?.();dialogCleanup=null;dialogKeyHandler=null;done.add(id);status.textContent='СИСТЕМЫ: '+done.size+' / '+rooms.length;dialog.close();if(done.size===rooms.length)recordScore();else say('Система восстановлена. Открыт следующий шлюз.');game.focus();update()}
 function mount(title,copy,hint,body){content.innerHTML='<button class="hint">?</button><h2 class="mini-title">'+title+'</h2><p class="mini-copy">'+copy+'</p><div class="hint-box"></div>'+body;content.querySelector('.hint').onclick=()=>content.querySelector('.hint-box').textContent='ПОДСКАЗКА: '+hint;}
 function power(id){
  const symbols=['◉','⚙','◆','☼','✦','◈','☍','✚'],deck=[...symbols,...symbols].sort(()=>Math.random()-.5),open=Array(16).fill(false),matched=Array(16).fill(false);let first=null,scanning=false,scanTimer,scanInterval;
@@ -157,6 +165,10 @@ function mahjong(id){const glyphs=['⚙','⚓','◉','☼','⌘','⟡','⌁','�
  function reset(){clearTimeout(timer);removed=new Set();selected=null;locked=false;values=makeLayout();render()}
  content.querySelector('.mahjong-reset').onclick=reset;dialogCleanup=()=>{clearTimeout(timer);dialogKeyHandler=null};render()
 }
-function open(r){({power,pump,tetris,snake,sonar,code,relay,tic,galaga,mahjong})[r.task](r.id);dialog.showModal()}
+function cargo(id){const icons=['◫','▣','◇'],names=['ИНСТРУМЕНТЫ','ПРОВИЗИЯ','ФОРМА'],order=Array.from({length:7},()=>Math.floor(Math.random()*3));let step=0;mount('ОТСЕК ВЕЩЕВОЙ — СОРТИРОВКА','Погрузчик подаёт семь контейнеров. Направляйте их в нужный стеллаж.','Ориентируйтесь по символу и названию текущего контейнера. Ошибка возвращает контейнеры в начало очереди.','<div class="mini-status"></div><div class="choices">'+icons.map((v,i)=>'<button class="choice cargo-choice" data-i="'+i+'"><b>'+v+'</b><small>'+names[i]+'</small></button>').join('')+'</div>');const line=content.querySelector('.mini-status');function render(){line.textContent='КОНТЕЙНЕР '+(step+1)+' / '+order.length+': '+icons[order[step]]+' '+names[order[step]]}content.querySelectorAll('.cargo-choice').forEach(b=>b.onclick=()=>{const n=+b.dataset.i;sfx.click();if(n!==order[step]){sfx.error();step=0;line.textContent='НЕ ТОТ СТЕЛЛАЖ. ПАРТИЯ ВОЗВРАЩЕНА.';setTimeout(render,450);return}step++;if(step===order.length)finish(id);else render()});render()}
+function lock(id){const names=['КОРМОВОЙ','ЦЕНТРАЛЬНЫЙ','НОСОВОЙ'],target=[3,0,2],state=[0,1,2],mark=['—','╱','│','╲'];mount('ГАУПТВАХТА — ЗАМОК','Снимите аварийную блокировку камер: совместите три шлицевых замка.','Каждый замок имеет четыре положения. Цель: КОРМОВОЙ ╲, ЦЕНТРАЛЬНЫЙ —, НОСОВОЙ │.','<div class="pipe-grid" style="grid-template-columns:repeat(3,1fr)">'+state.map((v,i)=>'<button class="pipe-cell lock-cell" data-i="'+i+'"><small>'+names[i]+'</small><strong>'+mark[v]+'</strong></button>').join('')+'</div>');content.querySelectorAll('.lock-cell').forEach(b=>b.onclick=()=>{sfx.click();const i=+b.dataset.i;state[i]=(state[i]+1)%4;b.querySelector('strong').textContent=mark[state[i]];if(state.every((v,i)=>v===target[i]))finish(id)})}
+function berth(id){let cells=[false,false,false,true,true,true,false,true,false],locked=false;mount('КУБРИК — НОЧНОЙ РЕЖИМ','Восстановите аварийное освещение кубрика: зажгите все девять ламп.','Нажатие переключает выбранную лампу и её соседей по сторонам.','<div class="grid" style="grid-template-columns:repeat(3,1fr)">'+cells.map((_,i)=>'<button class="cell berth-cell" data-i="'+i+'">·</button>').join('')+'</div><div class="mini-status">ОСВЕЩЕНИЕ: НЕСТАБИЛЬНО</div>');const buttons=[...content.querySelectorAll('.berth-cell')],line=content.querySelector('.mini-status');function render(){buttons.forEach((b,i)=>{b.textContent=cells[i]?'●':'·';b.classList.toggle('lit',cells[i])})}function toggle(i){if(i<0||i>8)return;cells[i]=!cells[i]}buttons.forEach(b=>b.onclick=()=>{if(locked)return;sfx.click();const i=+b.dataset.i;toggle(i);if(i%3)toggle(i-1);if(i%3<2)toggle(i+1);toggle(i-3);toggle(i+3);render();if(cells.every(Boolean)){locked=true;line.textContent='ОСВЕЩЕНИЕ ВОССТАНОВЛЕНО';finish(id)}});render()}
+function torpedo(id){const path=Array.from({length:6},()=>Math.floor(Math.random()*16));let input=[],timers=[],showing=true;mount('ТОРПЕДНЫЙ — НАВЕДЕНИЕ','Повторите маршрут наведения шести импульсов. Ошибка сбрасывает серию.','Координаты мигают на сетке. После передачи нажимайте их в том же порядке.','<div class="grid torpedo-grid" style="grid-template-columns:repeat(4,1fr)">'+Array.from({length:16},(_,i)=>'<button class="cell torpedo-cell" data-i="'+i+'">'+String.fromCharCode(65+i%4)+(1+Math.floor(i/4))+'</button>').join('')+'</div><div class="mini-status">ПРИЁМ ТРАЕКТОРИИ…</div>');const cells=[...content.querySelectorAll('.torpedo-cell')],line=content.querySelector('.mini-status'),later=(fn,ms)=>timers.push(setTimeout(fn,ms));function play(n=0){if(n===path.length){showing=false;line.textContent='ПОВТОРИТЕ ТРАЕКТОРИЮ';return}const b=cells[path[n]];b.classList.add('lit');sfx.sonar();later(()=>{b.classList.remove('lit');later(()=>play(n+1),130)},310)}cells.forEach(b=>b.onclick=()=>{if(showing)return;const n=+b.dataset.i;sfx.click();input.push(n);if(n!==path[input.length-1]){sfx.error();input=[];line.textContent='ОШИБКА НАВЕДЕНИЯ. СЕРИЯ СБРОШЕНА.'}else if(input.length===path.length)finish(id);else line.textContent='ПРИНЯТО: '+input.length+' / '+path.length});dialogCleanup=()=>{timers.forEach(clearTimeout);dialogKeyHandler=null};later(play,350)}
+function open(r){({power,pump,tetris,snake,sonar,code,relay,tic,galaga,mahjong,cargo,lock,berth,torpedo})[r.task](r.id);dialog.showModal()}
 window.addEventListener('keydown',e=>{audio();startAmbient();if(!sessionReady){if(dialog.open){if(e.key==='Escape'){dialogCleanup?.();dialogCleanup=null;dialog.close()}return}e.preventDefault();showIntro();return}if(dialog.open){if(e.key==='Escape'){dialogCleanup?.();dialogCleanup=null;dialogKeyHandler=null;dialog.close()}else dialogKeyHandler?.(e);return}const d={ArrowLeft:[-1,0],a:[-1,0],A:[-1,0],ArrowRight:[1,0],d:[1,0],D:[1,0],ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowDown:[0,1],s:[0,1],S:[0,1]}[e.key];if(d){e.preventDefault();let x=player.x+d[0],y=player.y+d[1];if(reachable(x,y)){player={x,y};movingUntil=Date.now()+360;sfx.drone()}else{sfx.error();say(initialRepairLocked(x,y)?'Сначала восстановите щит питания в этом отсеке.':'Здесь сплошная переборка или закрытый шлюз.')}update()}if((e.key==='e'||e.key==='E')&&active)open(active);if(e.key==='r'||e.key==='R')say(active?'ЦЕЛЬ: '+active.name+'. Подлетите к центральному терминалу и нажмите E.':'ЦЕЛЬ: найдите красный терминал в доступном отсеке.');});
 document.querySelector('#close-game').onclick=()=>{dialogCleanup?.();dialogCleanup=null;dialogKeyHandler=null;dialog.close()};game.addEventListener('click',()=>game.focus());game.focus();update();requestAnimationFrame(animateRepairFrames);
