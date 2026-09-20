@@ -1,6 +1,6 @@
 const game=document.querySelector('#game'),canvas=document.querySelector('#map'),ctx=canvas.getContext('2d'),dialog=document.querySelector('#minigame'),content=document.querySelector('#minigame-content'),message=document.querySelector('#message'),status=document.querySelector('#system-status');
 const blueprint=new Image();let blueprintReady=false;blueprint.onload=()=>{blueprintReady=true;draw()};blueprint.src='assets/submarine-layout.png';
-const S=8,done=new Set();let player={x:39,y:70},active=null;
+const S=8,done=new Set();let player={x:39,y:70},active=null,movingUntil=0,motionFrame=0;
 const rooms=[
  {id:1,name:'РЕМОНТНЫЙ ОТСЕК',task:'power',x:31,y:67,w:14,h:8},
  {id:2,name:'ЭНЕРГООТСЕК',task:'pump',x:48,y:49,w:13,h:8},
@@ -33,15 +33,12 @@ const pipeSegments=[[309,536,309,482],[309,482,372,482],[372,482,372,428],[372,4
 function centeredPipePoint(px,py){let best=null;for(const [x1,y1,x2,y2] of pipeSegments){const dx=x2-x1,dy=y2-y1,len=dx*dx+dy*dy,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/len)),x=x1+dx*t,y=y1+dy*t,d=(px-x)*(px-x)+(py-y)*(py-y);if(!best||d<best.d)best={x,y,d}}return best?[best.x,best.y]:[px,py]}
 function drawAirlocks(){ctx.save();ctx.lineCap='square';ctx.lineJoin='round';for(const [x1,y1,x2,y2] of pipeSegments){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle='rgba(3,24,29,.92)';ctx.lineWidth=52;ctx.stroke();ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle='rgba(43,164,151,.72)';ctx.lineWidth=40;ctx.stroke();ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle='#b8fff0';ctx.shadowColor='#76e6c5';ctx.shadowBlur=12;ctx.lineWidth=3;ctx.stroke()}ctx.restore()}
 function pixel(cx,cy,x,y,w,h,color,p=3){ctx.fillStyle=color;ctx.fillRect(cx+x*p,cy+y*p,w*p,h*p)}
-function drawDrone(cx,cy){ctx.save();ctx.imageSmoothingEnabled=false;const p=3,black='#030708',joint='#777487',lime='#ccff72',beacon='#df604d';
- // Матричный силуэт с присланного дрона: маяк, корпус, манипуляторы и две опоры.
- pixel(cx,cy,-1,-7,1,1,beacon,p);pixel(cx,cy,-2,-6,3,1,beacon,p);pixel(cx,cy,-3,-5,5,1,black,p);
- [[-8,-4],[-6,-4],[-3,-4],[3,-4],[6,-4],[8,-4],[-7,-3],[-5,-3],[-4,-3],[4,-3],[5,-3],[7,-3]].forEach(([x,y])=>pixel(cx,cy,x,y,1,1,black,p));
- [[-7,-4],[-5,-4],[-3,-4],[3,-4],[6,-4]].forEach(([x,y])=>pixel(cx,cy,x,y,1,1,joint,p));
- pixel(cx,cy,-2,-4,1,1,lime,p);pixel(cx,cy,-1,-4,2,1,lime,p);pixel(cx,cy,2,-4,1,1,lime,p);
- pixel(cx,cy,-1,-3,2,1,lime,p);pixel(cx,cy,-2,-3,1,1,lime,p);pixel(cx,cy,1,-3,1,1,lime,p);
- [[-2,-3],[0,-3],[2,-3]].forEach(([x,y])=>pixel(cx,cy,x,y,1,1,joint,p));
- pixel(cx,cy,-3,-2,6,1,black,p);pixel(cx,cy,-2,-1,4,1,black,p);pixel(cx,cy,-1,0,2,1,black,p);pixel(cx,cy,-1,1,1,2,black,p);pixel(cx,cy,1,1,1,2,black,p);ctx.restore()}
+function drawDrone(cx,cy){ctx.save();ctx.imageSmoothingEnabled=false;const p=7,wire='#1b2227',gray='#b9b8c5',orange='#ff9518',redOn='#ff5c4e',blueOn='#54a9ff',redOff='#572b30',blueOff='#27364f',moving=Date.now()<movingUntil,redPhase=Math.floor(Date.now()/115)%2===0;
+ // Пиксельный ремонтный модуль с присланного образца: два маяка и блок из четырёх панелей.
+ pixel(cx,cy,-3,-2,2,1,wire,p);pixel(cx,cy,1,-2,2,1,wire,p);
+ pixel(cx,cy,-4,-2,1,1,moving&&redPhase?redOn:redOff,p);pixel(cx,cy,3,-2,1,1,moving&&!redPhase?blueOn:blueOff,p);
+ if(moving){ctx.shadowBlur=10;ctx.shadowColor=redPhase?redOn:blueOn;pixel(cx,cy,redPhase?-4:3,-2,1,1,redPhase?redOn:blueOn,p);ctx.shadowBlur=0}
+ pixel(cx,cy,-1,-1,1,1,gray,p);pixel(cx,cy,0,-1,1,1,orange,p);pixel(cx,cy,-1,0,1,1,orange,p);pixel(cx,cy,0,0,1,1,gray,p);ctx.restore()}
 function draw(){
  const W=canvas.width,H=canvas.height;
  if(blueprintReady)ctx.drawImage(blueprint,0,0,W,H);else{ctx.fillStyle='#06151b';ctx.fillRect(0,0,W,H);return}
@@ -55,6 +52,7 @@ function draw(){
  ctx.fillStyle='#07191e';ctx.fillRect(1370,655,225,80);ctx.fillStyle='#7fa4a5';ctx.font='18px VT323';['ДАТЧИКИ:  НОРМА','КОРПУС:   ЦЕЛ','ПИТАНИЕ:  '+done.size+' / 7'].forEach((t,i)=>ctx.fillText(t,1390,680+i*21));
 }
 function update(){const r=roomAt(player.x,player.y);active=r&&!done.has(r.id)&&Math.abs(player.x-r.tx)+Math.abs(player.y-r.ty)<=1?r:null;draw();}
+function animateMovement(){draw();if(Date.now()<movingUntil)motionFrame=requestAnimationFrame(animateMovement);else{motionFrame=0;draw()}}
 function finish(id){done.add(id);status.textContent='СИСТЕМЫ: '+done.size+' / 7';dialog.close();say(id===7?'СИГНАЛ ПЕРЕДАН. В ГЛУБИНЕ ЕСТЬ ОТВЕТ.':'Система восстановлена. Открыт следующий шлюз.');game.focus();update()}
 function mount(title,copy,hint,body){content.innerHTML='<button class="hint">?</button><h2 class="mini-title">'+title+'</h2><p class="mini-copy">'+copy+'</p><div class="hint-box"></div>'+body;content.querySelector('.hint').onclick=()=>content.querySelector('.hint-box').textContent='ПОДСКАЗКА: '+hint;}
 function power(id){
@@ -80,5 +78,5 @@ function sonar(id){
 function code(id){const answer=id===4?'731':'407';let typed='';mount(id===4?'КАПИТАНСКИЙ МОСТИК':'ТРЮМ СВЯЗИ','Введите код доступа на терминале.','Код написан в самой задаче: для мостика — номер каюты 7, палубы 3, поста 1. Для трюма — сектор 4, ячейка 0, канал 7.','<div class="choices">'+[0,1,2,3,4,7].map(n=>'<button class="choice" data-n="'+n+'">'+n+'</button>').join('')+'</div><div class="mini-status">КОД: ———</div>');content.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{typed+=b.dataset.n;content.querySelector('.mini-status').textContent='КОД: '+typed;if(typed.length===3){if(typed===answer)finish(id);else {content.querySelector('.mini-status').textContent='НЕВЕРНО. СБРОС.';typed=''}}})}
 function relay(id){const correct=[2,0,3,1],input=[];mount('КАЮТ-КОМПАНИЯ','Перезапустите аварийное освещение: выберите четыре реле по порядку.','Слева направо лампы мигают: третья, первая, четвёртая, вторая.','<div class="choices">'+[0,1,2,3].map(n=>'<button class="choice" data-n="'+n+'">'+(n+1)+'</button>').join('')+'</div><div class="mini-status">ОЧЕРЕДЬ РЕЛЕ</div>');content.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{input.push(+b.dataset.n);if(input.at(-1)!==correct[input.length-1]){input.length=0;content.querySelector('.mini-status').textContent='СБРОС ЦЕПИ'}else if(input.length===4)finish(id)})}
 function open(r){({power,pump,sonar,code,relay})[r.task](r.id);dialog.showModal()}
-window.addEventListener('keydown',e=>{if(dialog.open){if(e.key==='Escape')dialog.close();return}const d={ArrowLeft:[-1,0],a:[-1,0],A:[-1,0],ArrowRight:[1,0],d:[1,0],D:[1,0],ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowDown:[0,1],s:[0,1],S:[0,1]}[e.key];if(d){e.preventDefault();let x=player.x+d[0],y=player.y+d[1];if(reachable(x,y))player={x,y};else say('Здесь сплошная переборка или закрытый шлюз.');update()}if((e.key==='e'||e.key==='E')&&active)open(active);if(e.key==='r'||e.key==='R')say(active?'ЦЕЛЬ: '+active.name+'. Подлетите к центральному терминалу и нажмите E.':'ЦЕЛЬ: найдите красный терминал в доступном отсеке.');});
+window.addEventListener('keydown',e=>{if(dialog.open){if(e.key==='Escape')dialog.close();return}const d={ArrowLeft:[-1,0],a:[-1,0],A:[-1,0],ArrowRight:[1,0],d:[1,0],D:[1,0],ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowDown:[0,1],s:[0,1],S:[0,1]}[e.key];if(d){e.preventDefault();let x=player.x+d[0],y=player.y+d[1];if(reachable(x,y)){player={x,y};movingUntil=Date.now()+360;if(!motionFrame)motionFrame=requestAnimationFrame(animateMovement)}else say('Здесь сплошная переборка или закрытый шлюз.');update()}if((e.key==='e'||e.key==='E')&&active)open(active);if(e.key==='r'||e.key==='R')say(active?'ЦЕЛЬ: '+active.name+'. Подлетите к центральному терминалу и нажмите E.':'ЦЕЛЬ: найдите красный терминал в доступном отсеке.');});
 document.querySelector('#close-game').onclick=()=>dialog.close();game.addEventListener('click',()=>game.focus());game.focus();update();
