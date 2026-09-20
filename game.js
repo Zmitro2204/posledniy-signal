@@ -5,7 +5,7 @@ const rooms=[
  {id:1,name:'РЕМОНТНЫЙ ОТСЕК',task:'power',x:31,y:67,w:14,h:8},
  {id:2,name:'ЭНЕРГООТСЕК',task:'tetris',x:48,y:49,w:13,h:8},
  {id:3,name:'ГИДРОАКУСТИКА',task:'sonar',x:84,y:66,w:15,h:8},
- {id:4,name:'КАПИТАНСКИЙ МОСТИК',task:'code',x:88,y:38,w:13,h:8},
+ {id:4,name:'КАПИТАНСКИЙ МОСТИК',task:'snake',x:88,y:38,w:13,h:8},
  {id:5,name:'КАЮТ-КОМПАНИЯ',task:'relay',x:105,y:52,w:16,h:7},
  {id:6,name:'КАМБУЗ / ОСУШЕНИЕ',task:'pump',x:138,y:65,w:11,h:9},
  {id:7,name:'ТРЮМ СВЯЗИ',task:'code',x:163,y:59,w:13,h:8}
@@ -83,6 +83,16 @@ function tetris(id){const W=10,H=18,C=20,colors=['#76e6c5','#f7bd54','#ef6b5d','
  dialogKeyHandler=e=>{if(!['ArrowLeft','ArrowRight','ArrowDown','ArrowUp',' '].includes(e.key))return;e.preventDefault();if(e.key==='ArrowLeft')move(-1,0);if(e.key==='ArrowRight')move(1,0);if(e.key==='ArrowDown')tick();if(e.key===' ')rotate()};
  dialogCleanup=()=>{clearInterval(timer);dialogKeyHandler=null};timer=setInterval(tick,700);spawn()
 }
+function snake(id){const W=14,H=18,C=18;let body=[{x:7,y:9},{x:6,y:9}],dir={x:1,y:0},next=dir,food=null,score=0,timer=null,ended=false;
+ mount('КАПИТАНСКИЙ МОСТИК — ЗМЕЙКА','Соберите 20 блоков сигнала, чтобы восстановить навигацию. Стартовый хвостовой блок не засчитывается.','Стрелки меняют направление. Не врезайтесь в корпус или собственный хвост.','<canvas id="snake" width="252" height="324" aria-label="Поле Змейки" style="display:block;width:252px;height:324px;margin:10px auto;border:2px solid #76e6c5;background:#07191e;image-rendering:pixelated"></canvas><div class="mini-status">БЛОКИ: 0 / 20</div>');
+ const field=content.querySelector('#snake'),g=field.getContext('2d'),statusLine=content.querySelector('.mini-status'),same=(a,b)=>a.x===b.x&&a.y===b.y;
+ function spawnFood(){const free=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(!body.some(p=>p.x===x&&p.y===y))free.push({x,y});food=free[Math.floor(Math.random()*free.length)]}
+ function render(){g.fillStyle='#07191e';g.fillRect(0,0,field.width,field.height);g.strokeStyle='#17373b';g.lineWidth=1;for(let x=0;x<=W;x++){g.beginPath();g.moveTo(x*C,0);g.lineTo(x*C,H*C);g.stroke()}for(let y=0;y<=H;y++){g.beginPath();g.moveTo(0,y*C);g.lineTo(W*C,y*C);g.stroke()}g.fillStyle='#ef6b5d';g.fillRect(food.x*C+3,food.y*C+3,C-6,C-6);body.forEach((p,i)=>{g.fillStyle=i?'#76e6c5':'#f7bd54';g.fillRect(p.x*C+2,p.y*C+2,C-4,C-4)});g.strokeStyle='#76e6c5';g.lineWidth=2;g.strokeRect(1,1,W*C-2,H*C-2)}
+ function reset(){body=[{x:7,y:9},{x:6,y:9}];dir={x:1,y:0};next=dir;score=0;ended=false;statusLine.textContent='БЛОКИ: 0 / 20';spawnFood();render()}
+ function tick(){if(ended)return;dir=next;const head={x:body[0].x+dir.x,y:body[0].y+dir.y};if(head.x<0||head.x>=W||head.y<0||head.y>=H||body.some(p=>same(p,head))){ended=true;statusLine.textContent='СТОЛКНОВЕНИЕ — НОВАЯ ПОПЫТКА';setTimeout(()=>{if(ended)reset()},750);return}body.unshift(head);if(same(head,food)){score++;statusLine.textContent='БЛОКИ: '+score+' / 20';if(score>=20){ended=true;finish(id);return}spawnFood()}else body.pop();render()}
+ dialogKeyHandler=e=>{const turns={ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0},ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1}},wanted=turns[e.key];if(!wanted)return;e.preventDefault();if(wanted.x!==-dir.x||wanted.y!==-dir.y)next=wanted};
+ dialogCleanup=()=>{clearInterval(timer);dialogKeyHandler=null};timer=setInterval(tick,180);spawnFood();render()
+}
 function sonar(id){
  let sequence=[],input=[],playing=false,timers=[];
  mount('ГИДРОАКУСТИКА','Прослушайте и повторите шесть импульсов. Нажимайте на большие кнопки «ИМПУЛЬ».','Кнопка «НОВЫЙ СИГНАЛ» каждый раз создаёт другую комбинацию. Пока индикаторы мигают, дождитесь окончания передачи.','<div class="sequence">'+[0,1,2,3].map(i=>'<button class="tone tone-'+i+'" data-i="'+i+'" aria-label="Импульс '+(i+1)+'"><small>ИМПУЛЬ</small><strong>'+(i+1)+'</strong></button>').join('')+'</div><div class="mini-status">ГОТОВ К ПЕРЕДАЧЕ</div><button class="replay">НОВЫЙ СИГНАЛ</button>');
@@ -95,6 +105,6 @@ function sonar(id){
 }
 function code(id){const answer=id===4?'731':'407';let typed='';mount(id===4?'КАПИТАНСКИЙ МОСТИК':'ТРЮМ СВЯЗИ','Введите код доступа на терминале.','Код написан в самой задаче: для мостика — номер каюты 7, палубы 3, поста 1. Для трюма — сектор 4, ячейка 0, канал 7.','<div class="choices">'+[0,1,2,3,4,7].map(n=>'<button class="choice" data-n="'+n+'">'+n+'</button>').join('')+'</div><div class="mini-status">КОД: ———</div>');content.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{typed+=b.dataset.n;content.querySelector('.mini-status').textContent='КОД: '+typed;if(typed.length===3){if(typed===answer)finish(id);else {content.querySelector('.mini-status').textContent='НЕВЕРНО. СБРОС.';typed=''}}})}
 function relay(id){const correct=[2,0,3,1],input=[];mount('КАЮТ-КОМПАНИЯ','Перезапустите аварийное освещение: выберите четыре реле по порядку.','Слева направо лампы мигают: третья, первая, четвёртая, вторая.','<div class="choices">'+[0,1,2,3].map(n=>'<button class="choice" data-n="'+n+'">'+(n+1)+'</button>').join('')+'</div><div class="mini-status">ОЧЕРЕДЬ РЕЛЕ</div>');content.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{input.push(+b.dataset.n);if(input.at(-1)!==correct[input.length-1]){input.length=0;content.querySelector('.mini-status').textContent='СБРОС ЦЕПИ'}else if(input.length===4)finish(id)})}
-function open(r){({power,pump,tetris,sonar,code,relay})[r.task](r.id);dialog.showModal()}
+function open(r){({power,pump,tetris,snake,sonar,code,relay})[r.task](r.id);dialog.showModal()}
 window.addEventListener('keydown',e=>{if(dialog.open){if(e.key==='Escape'){dialogCleanup?.();dialogCleanup=null;dialogKeyHandler=null;dialog.close()}else dialogKeyHandler?.(e);return}const d={ArrowLeft:[-1,0],a:[-1,0],A:[-1,0],ArrowRight:[1,0],d:[1,0],D:[1,0],ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowDown:[0,1],s:[0,1],S:[0,1]}[e.key];if(d){e.preventDefault();let x=player.x+d[0],y=player.y+d[1];if(reachable(x,y)){player={x,y};movingUntil=Date.now()+360}else say(initialRepairLocked(x,y)?'Сначала восстановите щит питания в этом отсеке.':'Здесь сплошная переборка или закрытый шлюз.');update()}if((e.key==='e'||e.key==='E')&&active)open(active);if(e.key==='r'||e.key==='R')say(active?'ЦЕЛЬ: '+active.name+'. Подлетите к центральному терминалу и нажмите E.':'ЦЕЛЬ: найдите красный терминал в доступном отсеке.');});
 document.querySelector('#close-game').onclick=()=>{dialogCleanup?.();dialogCleanup=null;dialogKeyHandler=null;dialog.close()};game.addEventListener('click',()=>game.focus());game.focus();update();requestAnimationFrame(animateRepairFrames);
